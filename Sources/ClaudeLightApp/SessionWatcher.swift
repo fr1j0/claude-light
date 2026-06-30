@@ -1,22 +1,25 @@
 import Foundation
 import Combine
 import CoreServices
+import AppKit
 import ClaudeLightCore
 
 @MainActor
 final class SessionWatcher: ObservableObject {
     @Published private(set) var sessions: [Session] = []
-    @Published private(set) var light: AggregateLight = .green
     @Published var hooksInstalled: Bool = false
-    @Published private(set) var needsAttention: Bool = false
-    @Published private(set) var attentionPhase: Bool = true
+    @Published private(set) var icon: IconState = IconState(lamp: .off, blink: false, breathe: false)
+    @Published private(set) var summary: String? = nil
+    @Published private(set) var animationPhase: Double = 0
+    @Published private(set) var isDarkMenuBar: Bool = true
 
     private let store: SessionStore
     private let installer: HookInstaller
     private var stream: FSEventStreamRef?
-    private var timer: Timer?
-    private var blinkTimer: Timer?
+    private var staleTimer: Timer?
+    private var clockTimer: Timer?
     private var started = false
+    private let clockInterval: TimeInterval = 0.08
 
     init(store: SessionStore, installer: HookInstaller) {
         self.store = store
@@ -28,23 +31,22 @@ final class SessionWatcher: ObservableObject {
         guard !started else { return }
         started = true
         hooksInstalled = installer.isInstalled()
+        updateAppearance()
+        observeAppearance()
         try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
         reload()
         startFSEvents()
-        // Re-evaluate staleness even when no file changes.
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        staleTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in self.reload() }
         }
     }
 
-    /// Installs the Claude Code hooks and refreshes the published install state.
     func installHooks() {
         try? installer.install()
         hooksInstalled = installer.isInstalled()
     }
 
-    /// Removes the Claude Code hooks and refreshes the published install state.
     func removeHooks() {
         try? installer.uninstall()
         hooksInstalled = installer.isInstalled()
@@ -52,24 +54,42 @@ final class SessionWatcher: ObservableObject {
 
     func reload() {
         let all = (try? store.loadAll()) ?? []
-        let live = liveSessions(all, now: Date())
-            .sorted { $0.project < $1.project }
+        let live = sortedForMenu(liveSessions(all, now: Date()))
         self.sessions = live
-        self.light = aggregateLight(for: live)
-        let attn = aggregateNeedsAttention(live)
-        if attn != needsAttention {
-            needsAttention = attn
-            updateBlink()
+        let state = iconState(for: live)
+        self.icon = state
+        self.summary = summaryText(for: statusCounts(for: live))
+        updateClock(animating: state.blink || state.breathe)
+    }
+
+    /// Runs the animation clock only while a lamp is blinking or breathing.
+    private func updateClock(animating: Bool) {
+        if animating {
+            guard clockTimer == nil else { return }
+            clockTimer = Timer.scheduledTimer(withTimeInterval: clockInterval, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in self.animationPhase += self.clockInterval }
+            }
+        } else {
+            clockTimer?.invalidate()
+            clockTimer = nil
+            animationPhase = 0
         }
     }
 
-    private func updateBlink() {
-        blinkTimer?.invalidate(); blinkTimer = nil
-        attentionPhase = true
-        guard needsAttention else { return }
-        blinkTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in self.attentionPhase.toggle() }
+    // MARK: - Menu-bar appearance (for the adaptive mono color)
+
+    private func updateAppearance() {
+        let match = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])
+        isDarkMenuBar = (match == .darkAqua)
+    }
+
+    private func observeAppearance() {
+        DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.updateAppearance() }
         }
     }
 
