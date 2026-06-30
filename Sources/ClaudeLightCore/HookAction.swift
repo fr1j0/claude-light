@@ -18,7 +18,7 @@ public func action(for payload: HookPayload, transcriptJSONL: String? = nil) -> 
     case "UserPromptSubmit", "PreToolUse":
         return .set(.running)
     case "Notification":
-        return isPermissionNotification(message: payload.message ?? "") ? .set(.waiting) : .ignore
+        return .set(.waiting)
     case "SessionEnd":
         return .delete
     default:

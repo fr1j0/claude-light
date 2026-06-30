@@ -22,7 +22,7 @@ final class ApplyHookTests: XCTestCase {
 
     func test_ignoreAction_writesNothing() throws {
         let store = tempStore()
-        let p = HookPayload(sessionID: "s1", hookEventName: "Notification", cwd: "/x", message: "Claude is waiting for your input")
+        let p = HookPayload(sessionID: "s1", hookEventName: "PostToolUse", cwd: "/x", message: nil)
         try applyHook(p, to: store, now: now)
         XCTAssertEqual(try store.loadAll().count, 0)
     }

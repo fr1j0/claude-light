@@ -29,12 +29,12 @@ final class HookActionTests: XCTestCase {
         XCTAssertEqual(action(for: payload("PreToolUse")), .set(.running))
     }
 
-    func test_notification_permission_isWaiting() {
-        XCTAssertEqual(action(for: payload("Notification", message: "needs your permission")), .set(.waiting))
+    func test_notification_anyMessage_isWaiting() {
+        XCTAssertEqual(action(for: payload("Notification", message: "anything")), .set(.waiting))
     }
 
-    func test_notification_idleNudge_isIgnored() {
-        XCTAssertEqual(action(for: payload("Notification", message: "Claude is waiting for your input")), .ignore)
+    func test_notification_nilMessage_isWaiting() {
+        XCTAssertEqual(action(for: payload("Notification")), .set(.waiting))
     }
 
     func test_sessionEnd_deletes() {

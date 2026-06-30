@@ -1,8 +1,20 @@
 import Foundation
 
-public let claudeLightHookEvents: [String] = [
-    "SessionStart", "UserPromptSubmit", "PreToolUse", "Notification", "Stop", "SessionEnd"
+public let claudeLightHookRegistrations: [(event: String, matcher: String?)] = [
+    ("SessionStart", nil),
+    ("UserPromptSubmit", nil),
+    ("PreToolUse", "*"),
+    ("Stop", nil),
+    ("SessionEnd", nil),
+    ("Notification", "permission_prompt"),
+    ("Notification", "elicitation_dialog"),
 ]
+
+// Derived from the registrations so the two can never drift out of sync.
+public let claudeLightHookEvents: [String] = {
+    var seen = Set<String>()
+    return claudeLightHookRegistrations.map(\.event).filter { seen.insert($0).inserted }
+}()
 
 private func groupCommands(_ group: [String: Any]) -> [String] {
     (group["hooks"] as? [[String: Any]] ?? []).compactMap { $0["command"] as? String }
@@ -16,14 +28,28 @@ public func installedHooks(into root: [String: Any], command: String) -> [String
     }
     var hooks = (root["hooks"] as? [String: Any]) ?? [:]
 
-    for event in claudeLightHookEvents {
+    for registration in claudeLightHookRegistrations {
+        let event = registration.event
+        let matcher = registration.matcher
         // Fix 1: cast to [Any] first so non-dict elements don't discard the whole array.
         let rawGroups = (hooks[event] as? [Any]) ?? []
         var groups = rawGroups.compactMap { $0 as? [String: Any] }
-        let alreadyPresent = groups.contains { groupCommands($0).contains(command) }
-        if !alreadyPresent {
+        // A registration is satisfied iff some group for this event has our command
+        // AND its matcher equals the registration matcher (nil == no "matcher" key).
+        let alreadySatisfied = groups.contains { group in
+            let hasCmd = groupCommands(group).contains(command)
+            let groupMatcher = group["matcher"] as? String
+            let matcherMatches: Bool
+            if let m = matcher {
+                matcherMatches = groupMatcher == m
+            } else {
+                matcherMatches = groupMatcher == nil
+            }
+            return hasCmd && matcherMatches
+        }
+        if !alreadySatisfied {
             var group: [String: Any] = ["hooks": [["type": "command", "command": command]]]
-            if event == "PreToolUse" { group["matcher"] = "*" }
+            if let m = matcher { group["matcher"] = m }
             groups.append(group)
         }
         hooks[event] = groups
