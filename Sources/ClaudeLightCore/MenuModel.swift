@@ -36,3 +36,21 @@ public func summaryText(for counts: StatusCounts) -> String? {
     if parts.isEmpty { return "Idle" }   // only idle sessions
     return parts.joined(separator: " · ")
 }
+
+/// Display order for the dropdown: most urgent first, then by project name
+/// (stable so rows don't reorder as timestamps tick).
+public func sortedForMenu(_ sessions: [Session]) -> [Session] {
+    func rank(_ status: SessionStatus) -> Int {
+        switch status {
+        case .attention: return 0
+        case .waiting: return 1
+        case .running: return 2
+        case .idle: return 3
+        }
+    }
+    return sessions.sorted { a, b in
+        let ra = rank(a.status), rb = rank(b.status)
+        if ra != rb { return ra < rb }
+        return a.project < b.project
+    }
+}

@@ -24,3 +24,17 @@ final class MenuModelTests: XCTestCase {
         XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 4)), "Idle")
     }
 }
+
+extension MenuModelTests {
+    func test_sorted_urgencyThenProject() {
+        let input = [
+            s(.idle, project: "z"),
+            s(.running, project: "b"),
+            s(.attention, project: "m"),
+            s(.running, project: "a"),
+            s(.waiting, project: "k"),
+        ]
+        let order = sortedForMenu(input).map { "\($0.status.rawValue):\($0.project)" }
+        XCTAssertEqual(order, ["attention:m", "waiting:k", "running:a", "running:b", "idle:z"])
+    }
+}
