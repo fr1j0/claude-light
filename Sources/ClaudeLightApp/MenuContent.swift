@@ -8,12 +8,20 @@ struct MenuContent: View {
         if watcher.sessions.isEmpty {
             Text("No active Claude Code sessions").foregroundStyle(.secondary)
         } else {
+            if let summary = watcher.summary {
+                Label {
+                    Text(summary)
+                } icon: {
+                    Image(systemName: "circle.fill").foregroundStyle(headerColor)
+                }
+                .disabled(true)
+                Divider()
+            }
             ForEach(watcher.sessions, id: \.sessionID) { session in
                 Label {
-                    Text("\(session.project) — \(friendlyLabel(for: session.status))")
+                    Text(rowText(for: session))
                 } icon: {
-                    Image(systemName: "circle.fill")
-                        .foregroundStyle(color(for: session.status))
+                    Image(systemName: "circle.fill").foregroundStyle(color(for: session.status))
                 }
             }
         }
@@ -26,6 +34,20 @@ struct MenuContent: View {
             }
         }
         Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
+    }
+
+    private var headerColor: Color {
+        switch watcher.icon.lamp {
+        case .red: return .red
+        case .orange: return .orange
+        case .green: return .green
+        case .off: return .secondary
+        }
+    }
+
+    private func rowText(for session: Session) -> String {
+        let age = relativeTime(secondsAgo: Date().timeIntervalSince(session.updatedAt))
+        return "\(session.project) — \(friendlyLabel(for: session.status)) · \(age)"
     }
 
     private func color(for status: SessionStatus) -> Color {
