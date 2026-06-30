@@ -23,7 +23,7 @@ struct ClaudeLightApp: App {
         } label: {
             // The label is the always-visible menu-bar icon, so its onAppear
             // fires at app launch (the menu's content only appears when opened).
-            Image(nsImage: Self.dotImage(for: watcher.light))
+            Image(nsImage: Self.dotImage(for: watcher.light, dim: watcher.needsAttention && !watcher.attentionPhase))
                 .onAppear {
                     watcher.start()
                     DispatchQueue.main.async { offerHookInstallIfNeeded() }
@@ -64,13 +64,14 @@ struct ClaudeLightApp: App {
     /// Renders the status dot as a NON-template `NSImage` so the menu bar keeps
     /// the real color. A template image (the default for SF Symbols) is coerced
     /// to monochrome by the system, which is why `foregroundStyle` was ignored.
-    private static func dotImage(for light: AggregateLight) -> NSImage {
-        let color: NSColor
+    private static func dotImage(for light: AggregateLight, dim: Bool = false) -> NSImage {
+        let base: NSColor
         switch light {
-        case .red: color = .systemRed
-        case .orange: color = .systemOrange
-        case .green: color = .systemGreen
+        case .red: base = .systemRed
+        case .orange: base = .systemOrange
+        case .green: base = .systemGreen
         }
+        let color = dim ? base.withAlphaComponent(0.18) : base
         let diameter: CGFloat = 13
         let inset: CGFloat = 1
         let image = NSImage(size: NSSize(width: diameter, height: diameter))

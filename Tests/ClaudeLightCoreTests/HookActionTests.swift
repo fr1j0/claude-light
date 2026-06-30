@@ -6,9 +6,22 @@ final class HookActionTests: XCTestCase {
         HookPayload(sessionID: "s", hookEventName: event, cwd: "/tmp/p", message: message)
     }
 
-    func test_sessionStart_and_stop_areIdle() {
+    func test_sessionStart_isIdle() {
         XCTAssertEqual(action(for: payload("SessionStart")), .set(.idle))
-        XCTAssertEqual(action(for: payload("Stop")), .set(.idle))
+    }
+
+    func test_stop_nilTranscript_isIdle() {
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: nil), .set(.idle))
+    }
+
+    func test_stop_questionTranscript_isAttention() {
+        let jsonl = #"{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Which option?"}]}}"#
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: jsonl), .set(.attention))
+    }
+
+    func test_stop_nonQuestionTranscript_isIdle() {
+        let jsonl = #"{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Done."}]}}"#
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: jsonl), .set(.idle))
     }
 
     func test_prompt_and_preToolUse_areRunning() {

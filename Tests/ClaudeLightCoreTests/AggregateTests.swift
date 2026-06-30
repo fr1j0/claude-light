@@ -35,4 +35,25 @@ final class AggregateTests: XCTestCase {
         let edge = s(.running, ageSeconds: 1800)
         XCTAssertEqual(liveSessions([edge], now: now, ttl: 1800).count, 1)
     }
+
+    func test_attentionSession_isRed() {
+        XCTAssertEqual(aggregateLight(for: [s(.attention)]), .red)
+    }
+
+    func test_attentionSession_needsAttentionTrue() {
+        XCTAssertTrue(aggregateNeedsAttention([s(.attention)]))
+    }
+
+    func test_waitingSession_isRedButNotNeedsAttention() {
+        XCTAssertEqual(aggregateLight(for: [s(.waiting)]), .red)
+        XCTAssertFalse(aggregateNeedsAttention([s(.waiting)]))
+    }
+
+    func test_noAttentionSessions_needsAttentionFalse() {
+        XCTAssertFalse(aggregateNeedsAttention([s(.running), s(.idle)]))
+    }
+
+    func test_emptyNeedsAttentionFalse() {
+        XCTAssertFalse(aggregateNeedsAttention([]))
+    }
 }

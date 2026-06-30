@@ -8,11 +8,14 @@ final class SessionWatcher: ObservableObject {
     @Published private(set) var sessions: [Session] = []
     @Published private(set) var light: AggregateLight = .green
     @Published var hooksInstalled: Bool = false
+    @Published private(set) var needsAttention: Bool = false
+    @Published private(set) var attentionPhase: Bool = true
 
     private let store: SessionStore
     private let installer: HookInstaller
     private var stream: FSEventStreamRef?
     private var timer: Timer?
+    private var blinkTimer: Timer?
     private var started = false
 
     init(store: SessionStore, installer: HookInstaller) {
@@ -52,6 +55,20 @@ final class SessionWatcher: ObservableObject {
             .sorted { $0.project < $1.project }
         self.sessions = live
         self.light = aggregateLight(for: live)
+        let attn = aggregateNeedsAttention(live)
+        if attn != needsAttention {
+            needsAttention = attn
+            updateBlink()
+        }
+    }
+
+    private func updateBlink() {
+        blinkTimer?.invalidate(); blinkTimer = nil
+        attentionPhase = true
+        guard needsAttention else { return }
+        blinkTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.attentionPhase.toggle() }
+        }
     }
 
     private func startFSEvents() {

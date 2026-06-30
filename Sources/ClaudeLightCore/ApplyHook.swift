@@ -1,7 +1,7 @@
 import Foundation
 
-public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date) throws {
-    switch action(for: payload) {
+public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date, transcriptJSONL: String? = nil) throws {
+    switch action(for: payload, transcriptJSONL: transcriptJSONL) {
     case .ignore:
         return
     case .delete:
