@@ -21,17 +21,31 @@ struct ClaudeLightApp: App {
             MenuContent(watcher: watcher)
                 .onAppear { watcher.start() }
         } label: {
-            Image(systemName: "circle.fill")
-                .foregroundStyle(tint(for: watcher.light))
+            Image(nsImage: Self.dotImage(for: watcher.light))
         }
         .menuBarExtraStyle(.menu)
     }
 
-    private func tint(for light: AggregateLight) -> Color {
+    /// Renders the status dot as a NON-template `NSImage` so the menu bar keeps
+    /// the real color. A template image (the default for SF Symbols) is coerced
+    /// to monochrome by the system, which is why `foregroundStyle` was ignored.
+    private static func dotImage(for light: AggregateLight) -> NSImage {
+        let color: NSColor
         switch light {
-        case .red: return .red
-        case .orange: return .orange
-        case .green: return .green
+        case .red: color = .systemRed
+        case .orange: color = .systemOrange
+        case .green: color = .systemGreen
         }
+        let diameter: CGFloat = 13
+        let inset: CGFloat = 1
+        let image = NSImage(size: NSSize(width: diameter, height: diameter))
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(ovalIn: NSRect(x: inset, y: inset,
+                                    width: diameter - inset * 2,
+                                    height: diameter - inset * 2)).fill()
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
     }
 }
