@@ -3,6 +3,7 @@ import Foundation
 public enum SessionStatus: String, Codable, Sendable {
     case running
     case waiting
+    case attention
     case idle
 }
 

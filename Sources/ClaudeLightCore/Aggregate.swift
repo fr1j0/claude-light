@@ -11,7 +11,11 @@ public func liveSessions(_ sessions: [Session], now: Date, ttl: TimeInterval = 1
 }
 
 public func aggregateLight(for sessions: [Session]) -> AggregateLight {
-    if sessions.contains(where: { $0.status == .waiting }) { return .red }
+    if sessions.contains(where: { $0.status == .waiting || $0.status == .attention }) { return .red }
     if sessions.contains(where: { $0.status == .running }) { return .orange }
     return .green
+}
+
+public func aggregateNeedsAttention(_ sessions: [Session]) -> Bool {
+    sessions.contains { $0.status == .attention }
 }

@@ -10,7 +10,7 @@ struct MenuContent: View {
         } else {
             ForEach(watcher.sessions, id: \.sessionID) { session in
                 Label {
-                    Text("\(session.project) — \(session.status.rawValue)")
+                    Text("\(session.project) — \(friendlyLabel(for: session.status))")
                 } icon: {
                     Image(systemName: "circle.fill")
                         .foregroundStyle(color(for: session.status))
@@ -31,8 +31,18 @@ struct MenuContent: View {
     private func color(for status: SessionStatus) -> Color {
         switch status {
         case .waiting: return .red
+        case .attention: return .red
         case .running: return .orange
         case .idle: return .green
+        }
+    }
+
+    private func friendlyLabel(for status: SessionStatus) -> String {
+        switch status {
+        case .running: return "running"
+        case .waiting: return "waiting for permission"
+        case .attention: return "awaiting your reply"
+        case .idle: return "idle"
         }
     }
 }

@@ -6,7 +6,11 @@ let input = FileHandle.standardInput.readDataToEndOfFile()
 
 if let payload = try? ClaudeLightJSON.decoder.decode(HookPayload.self, from: input) {
     let store = SessionStore(directory: SessionStore.defaultDirectory())
-    try? applyHook(payload, to: store, now: Date())
+    var transcriptJSONL: String? = nil
+    if payload.hookEventName == "Stop", let path = payload.transcriptPath {
+        transcriptJSONL = try? String(contentsOfFile: path, encoding: .utf8)
+    }
+    try? applyHook(payload, to: store, now: Date(), transcriptJSONL: transcriptJSONL)
 }
 
 exit(0)
