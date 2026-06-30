@@ -10,7 +10,7 @@ final class SessionWatcher: ObservableObject {
     @Published var hooksInstalled: Bool = false
 
     private let store: SessionStore
-    let installer: HookInstaller
+    private let installer: HookInstaller
     private var stream: FSEventStreamRef?
     private var timer: Timer?
     private var started = false
@@ -32,6 +32,18 @@ final class SessionWatcher: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.reload() }
         }
+    }
+
+    /// Installs the Claude Code hooks and refreshes the published install state.
+    func installHooks() {
+        try? installer.install()
+        hooksInstalled = installer.isInstalled()
+    }
+
+    /// Removes the Claude Code hooks and refreshes the published install state.
+    func removeHooks() {
+        try? installer.uninstall()
+        hooksInstalled = installer.isInstalled()
     }
 
     func reload() {
