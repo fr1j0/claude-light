@@ -9,7 +9,7 @@ struct ClaudeLightApp: App {
         // Points at the bundled hook binary inside the running .app.
         let hookPath = Bundle.main.bundleURL
             .appendingPathComponent("Contents/MacOS/claude-light-hook").path
-        let installer = HookInstaller(settingsURL: settings, command: hookPath)
+        let installer = HookInstaller(settingsURL: settings, command: shellQuoted(hookPath))
         return SessionWatcher(
             store: SessionStore(directory: SessionStore.defaultDirectory()),
             installer: installer

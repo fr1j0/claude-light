@@ -49,7 +49,13 @@ jobs:
         env:
           MACOS_CERT_IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}
         run: |
-          codesign --deep --force --options runtime \
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_CERT_IDENTITY" \
+            "dist/Claude Light.app/Contents/MacOS/claude-light-hook"
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_CERT_IDENTITY" \
+            "dist/Claude Light.app/Contents/MacOS/ClaudeLightApp"
+          codesign --force --options runtime --timestamp \
             --sign "$MACOS_CERT_IDENTITY" \
             "dist/Claude Light.app"
 
