@@ -33,7 +33,8 @@ final class SessionWatcher: ObservableObject {
         startFSEvents()
         // Re-evaluate staleness even when no file changes.
         timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.reload() }
+            guard let self else { return }
+            Task { @MainActor in self.reload() }
         }
     }
 
@@ -67,7 +68,8 @@ final class SessionWatcher: ObservableObject {
         attentionPhase = true
         guard needsAttention else { return }
         blinkTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.attentionPhase.toggle() }
+            guard let self else { return }
+            Task { @MainActor in self.attentionPhase.toggle() }
         }
     }
 
