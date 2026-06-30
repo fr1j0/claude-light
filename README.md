@@ -1,6 +1,10 @@
-# Claude Light
+<p align="center">
+  <img src="assets/traffic-light.png" alt="Claude Light" height="150">
+</p>
 
-A native macOS menu-bar app that shows the status of your Claude Code sessions at a glance.
+<h1 align="center">Claude Light</h1>
+
+<p align="center">A native macOS menu-bar app that shows the status of your Claude Code sessions at a glance.</p>
 
 ## What It Does
 

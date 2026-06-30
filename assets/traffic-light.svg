@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 460" width="240" height="460" role="img" aria-label="Claude Light traffic light">
+  <defs>
+    <radialGradient id="red" cx="38%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#FF6B61"/>
+      <stop offset="100%" stop-color="#FF3B30"/>
+    </radialGradient>
+    <radialGradient id="orange" cx="38%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#FFC062"/>
+      <stop offset="100%" stop-color="#FF9500"/>
+    </radialGradient>
+    <radialGradient id="green" cx="38%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#5BE07F"/>
+      <stop offset="100%" stop-color="#34C759"/>
+    </radialGradient>
+  </defs>
+
+  <!-- pole (drawn first, housing overlaps its top) -->
+  <rect x="108" y="356" width="24" height="104" rx="6" fill="#2C3A48"/>
+  <rect x="108" y="356" width="9"  height="104" rx="4" fill="#384A5B"/>
+
+  <!-- housing -->
+  <rect x="38" y="18" width="164" height="350" rx="42" fill="#243140" stroke="#19232E" stroke-width="6"/>
+  <!-- soft top-left highlight on the housing -->
+  <path d="M70 30 H150" stroke="#33455A" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- lights -->
+  <g stroke="#19232E" stroke-width="5">
+    <circle cx="120" cy="98"  r="44" fill="url(#red)"/>
+    <circle cx="120" cy="193" r="44" fill="url(#orange)"/>
+    <circle cx="120" cy="288" r="44" fill="url(#green)"/>
+  </g>
+
+  <!-- glints -->
+  <g fill="#FFFFFF" opacity="0.85">
+    <ellipse cx="104" cy="82"  rx="11" ry="14" transform="rotate(-20 104 82)"/>
+    <ellipse cx="104" cy="177" rx="11" ry="14" transform="rotate(-20 104 177)"/>
+    <ellipse cx="104" cy="272" rx="11" ry="14" transform="rotate(-20 104 272)"/>
+  </g>
+</svg>
