@@ -89,7 +89,8 @@ final class SessionWatcher: ObservableObject {
             forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
             object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.updateAppearance() }
+            guard let self else { return }
+            Task { @MainActor in self.updateAppearance() }
         }
     }
 
