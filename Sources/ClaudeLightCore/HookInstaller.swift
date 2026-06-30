@@ -10,10 +10,16 @@ private func groupCommands(_ group: [String: Any]) -> [String] {
 
 public func installedHooks(into root: [String: Any], command: String) -> [String: Any] {
     var root = root
+    // Fix 2: if "hooks" key exists but is not a [String: Any], leave the whole root unchanged.
+    if root["hooks"] != nil, (root["hooks"] as? [String: Any]) == nil {
+        return root
+    }
     var hooks = (root["hooks"] as? [String: Any]) ?? [:]
 
     for event in claudeLightHookEvents {
-        var groups = (hooks[event] as? [[String: Any]]) ?? []
+        // Fix 1: cast to [Any] first so non-dict elements don't discard the whole array.
+        let rawGroups = (hooks[event] as? [Any]) ?? []
+        var groups = rawGroups.compactMap { $0 as? [String: Any] }
         let alreadyPresent = groups.contains { groupCommands($0).contains(command) }
         if !alreadyPresent {
             var group: [String: Any] = ["hooks": [["type": "command", "command": command]]]

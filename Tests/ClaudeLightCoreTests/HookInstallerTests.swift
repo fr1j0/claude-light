@@ -33,10 +33,10 @@ final class HookInstallerTests: XCTestCase {
         XCTAssertTrue(commands(out, "Stop").contains(cmd))
     }
 
-    func test_preToolUse_groupHasMatcher() {
+    func test_preToolUse_groupHasMatcher() throws {
         let out = installedHooks(into: [:], command: cmd)
-        let hooks = out["hooks"] as! [String: Any]
-        let groups = hooks["PreToolUse"] as! [[String: Any]]
+        let hooks = try XCTUnwrap(out["hooks"] as? [String: Any])
+        let groups = try XCTUnwrap(hooks["PreToolUse"] as? [[String: Any]])
         let ours = groups.first { ($0["hooks"] as? [[String: Any]])?.contains { $0["command"] as? String == cmd } == true }
         XCTAssertEqual(ours?["matcher"] as? String, "*")
     }
@@ -55,6 +55,22 @@ final class HookInstallerTests: XCTestCase {
         let installed = installedHooks(into: [:], command: cmd)
         let out = uninstalledHooks(from: installed, command: cmd)
         XCTAssertNil(out["hooks"])
+    }
+
+    func test_install_preservesExistingGroups_whenArrayHasNonDictElement() {
+        let existing: [String: Any] = [
+            "hooks": ["Stop": [["hooks": [["type": "command", "command": "/other/tool"]]], "junk-string"]]
+        ]
+        let out = installedHooks(into: existing, command: cmd)
+        XCTAssertTrue(commands(out, "Stop").contains("/other/tool"))
+        XCTAssertTrue(commands(out, "Stop").contains(cmd))
+    }
+
+    func test_install_leavesMalformedHooksValueUntouched() {
+        let existing: [String: Any] = ["hooks": ["not", "an", "object"]]
+        let out = installedHooks(into: existing, command: cmd)
+        XCTAssertTrue(out["hooks"] is [Any])
+        XCTAssertEqual((out["hooks"] as? [String])?.count, 3)
     }
 
     func test_diskRoundTrip_installThenUninstall() throws {
