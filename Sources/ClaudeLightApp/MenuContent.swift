@@ -3,9 +3,6 @@ import ClaudeLightCore
 
 struct MenuContent: View {
     @ObservedObject var watcher: SessionWatcher
-    let installer: HookInstaller
-
-    @State private var hooksInstalled = false
 
     var body: some View {
         if watcher.sessions.isEmpty {
@@ -21,13 +18,13 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button(hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
-            if hooksInstalled {
-                try? installer.uninstall()
+        Button(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
+            if watcher.hooksInstalled {
+                try? watcher.installer.uninstall()
             } else {
-                try? installer.install()
+                try? watcher.installer.install()
             }
-            hooksInstalled.toggle()
+            watcher.hooksInstalled = watcher.installer.isInstalled()
         }
         Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
     }

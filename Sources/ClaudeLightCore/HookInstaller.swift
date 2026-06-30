@@ -54,6 +54,19 @@ public func uninstalledHooks(from root: [String: Any], command: String) -> [Stri
     return root
 }
 
+/// Returns true iff `root` already contains `command` in any event group's inner hooks.
+public func hooksAreInstalled(in root: [String: Any], command: String) -> Bool {
+    guard let hooks = root["hooks"] as? [String: Any] else { return false }
+    for event in claudeLightHookEvents {
+        let rawGroups = (hooks[event] as? [Any]) ?? []
+        let groups = rawGroups.compactMap { $0 as? [String: Any] }
+        if groups.contains(where: { groupCommands($0).contains(command) }) {
+            return true
+        }
+    }
+    return false
+}
+
 public struct HookInstaller {
     public let settingsURL: URL
     public let command: String
@@ -81,6 +94,12 @@ public struct HookInstaller {
             withIntermediateDirectories: true
         )
         try data.write(to: settingsURL, options: .atomic)
+    }
+
+    /// Returns true iff the hook command is currently present in the settings file on disk.
+    public func isInstalled() -> Bool {
+        let root = (try? loadRoot()) ?? [:]
+        return hooksAreInstalled(in: root, command: command)
     }
 
     public func install() throws {

@@ -3,22 +3,22 @@ import ClaudeLightCore
 
 @main
 struct ClaudeLightApp: App {
-    @StateObject private var watcher = SessionWatcher(
-        store: SessionStore(directory: SessionStore.defaultDirectory())
-    )
-
-    private var installer: HookInstaller {
+    @StateObject private var watcher: SessionWatcher = {
         let settings = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".claude/settings.json")
         // Points at the bundled hook binary inside the running .app.
         let hookPath = Bundle.main.bundleURL
             .appendingPathComponent("Contents/MacOS/claude-light-hook").path
-        return HookInstaller(settingsURL: settings, command: hookPath)
-    }
+        let installer = HookInstaller(settingsURL: settings, command: hookPath)
+        return SessionWatcher(
+            store: SessionStore(directory: SessionStore.defaultDirectory()),
+            installer: installer
+        )
+    }()
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContent(watcher: watcher, installer: installer)
+            MenuContent(watcher: watcher)
                 .onAppear { watcher.start() }
         } label: {
             Image(systemName: "circle.fill")

@@ -7,20 +7,24 @@ import ClaudeLightCore
 final class SessionWatcher: ObservableObject {
     @Published private(set) var sessions: [Session] = []
     @Published private(set) var light: AggregateLight = .green
+    @Published var hooksInstalled: Bool = false
 
     private let store: SessionStore
+    let installer: HookInstaller
     private var stream: FSEventStreamRef?
     private var timer: Timer?
     private var started = false
 
-    init(store: SessionStore) {
+    init(store: SessionStore, installer: HookInstaller) {
         self.store = store
+        self.installer = installer
     }
 
     /// Call exactly once. Idempotent: subsequent calls are no-ops.
     func start() {
         guard !started else { return }
         started = true
+        hooksInstalled = installer.isInstalled()
         try? FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
         reload()
         startFSEvents()

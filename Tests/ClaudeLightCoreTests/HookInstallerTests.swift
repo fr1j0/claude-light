@@ -73,6 +73,38 @@ final class HookInstallerTests: XCTestCase {
         XCTAssertEqual((out["hooks"] as? [String])?.count, 3)
     }
 
+    // MARK: – hooksAreInstalled pure helper
+
+    func test_hooksAreInstalled_falseOnEmpty() {
+        XCTAssertFalse(hooksAreInstalled(in: [:], command: cmd))
+    }
+
+    func test_hooksAreInstalled_trueAfterInstall() {
+        let installed = installedHooks(into: [:], command: cmd)
+        XCTAssertTrue(hooksAreInstalled(in: installed, command: cmd))
+    }
+
+    func test_hooksAreInstalled_falseAfterUninstall() {
+        let installed = installedHooks(into: [:], command: cmd)
+        let removed = uninstalledHooks(from: installed, command: cmd)
+        XCTAssertFalse(hooksAreInstalled(in: removed, command: cmd))
+    }
+
+    // MARK: – HookInstaller.isInstalled() disk method
+
+    func test_isInstalled_diskRoundTrip() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("settings-\(UUID().uuidString).json")
+        let installer = HookInstaller(settingsURL: url, command: cmd)
+        XCTAssertFalse(installer.isInstalled(), "no file → false")
+        try Data("{}".utf8).write(to: url)
+        XCTAssertFalse(installer.isInstalled(), "empty object → false")
+        try installer.install()
+        XCTAssertTrue(installer.isInstalled(), "after install → true")
+        try installer.uninstall()
+        XCTAssertFalse(installer.isInstalled(), "after uninstall → false")
+    }
+
     func test_diskRoundTrip_installThenUninstall() throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("settings-\(UUID().uuidString).json")
