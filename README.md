@@ -14,10 +14,6 @@
   <img alt="Made for Claude Code" src="https://img.shields.io/badge/Made_for-Claude_Code-D97757?style=for-the-badge">
 </p>
 
-<p align="center">
-  <img src="assets/state-colors.svg" alt="Status colors: needs you (red), working (orange), idle (green)" width="420">
-</p>
-
 ## Overview
 
 Claude Light watches every Claude Code session on your Mac and distills them into a single traffic light in the menu bar. One glance tells you whether an agent is waiting on you, still working, or done — no alt-tabbing through terminals to find out.
@@ -32,10 +28,10 @@ The menu-bar icon reflects the most urgent state across all your sessions:
 
 | Lamp | Meaning | Motion |
 |------|---------|--------|
-| Top — red | A session needs you: a question or permission prompt is waiting | Blinks |
-| Middle — orange | At least one session is actively working | Gentle pulse |
-| Bottom — green | Sessions are idle; nothing needs you | Steady |
-| All dim | No live sessions | Steady |
+| <img src="assets/lamp-red.svg" width="22" alt=""> Top — red | A session needs you: a question or permission prompt is waiting | Blinks |
+| <img src="assets/lamp-orange.svg" width="22" alt=""> Middle — orange | At least one session is actively working | Gentle pulse |
+| <img src="assets/lamp-green.svg" width="22" alt=""> Bottom — green | Sessions are idle; nothing needs you | Steady |
+| <img src="assets/lamp-dim.svg" width="22" alt=""> All dim | No live sessions | Steady |
 
 Red always wins the aggregate, so a single waiting session is never buried behind busy ones. Motion is reserved for the menu bar — a blink to pull your eye when a session needs a reply, a soft pulse while work is underway — and state is conveyed by lamp position as well as color.
 
