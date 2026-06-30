@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import ClaudeLightCore
 
 @main
@@ -19,11 +20,45 @@ struct ClaudeLightApp: App {
     var body: some Scene {
         MenuBarExtra {
             MenuContent(watcher: watcher)
-                .onAppear { watcher.start() }
         } label: {
+            // The label is the always-visible menu-bar icon, so its onAppear
+            // fires at app launch (the menu's content only appears when opened).
             Image(nsImage: Self.dotImage(for: watcher.light))
+                .onAppear {
+                    watcher.start()
+                    DispatchQueue.main.async { offerHookInstallIfNeeded() }
+                }
         }
         .menuBarExtraStyle(.menu)
+    }
+
+    /// On the very first launch, if the hooks aren't installed yet, greet the
+    /// user once and offer to install them. Records that we asked so it never
+    /// nags again — the menu's Install action remains the fallback.
+    private func offerHookInstallIfNeeded() {
+        let askedKey = "didOfferHookInstall"
+        let defaults = UserDefaults.standard
+        guard !watcher.hooksInstalled, !defaults.bool(forKey: askedKey) else { return }
+        defaults.set(true, forKey: askedKey)
+
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Welcome to Claude Light"
+        alert.informativeText = """
+        Claude Light shows a menu-bar light for your Claude Code sessions: \
+        orange while an agent is working, red when one needs your input, and \
+        green when it's idle.
+
+        To do that, it adds a small hook to your Claude Code settings \
+        (~/.claude/settings.json). You can remove it anytime from the menu.
+        """
+        alert.addButton(withTitle: "Install Hooks")
+        alert.addButton(withTitle: "Not Now")
+
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            watcher.installHooks()
+        }
     }
 
     /// Renders the status dot as a NON-template `NSImage` so the menu bar keeps

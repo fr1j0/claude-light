@@ -20,11 +20,10 @@ struct MenuContent: View {
         Divider()
         Button(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
             if watcher.hooksInstalled {
-                try? watcher.installer.uninstall()
+                watcher.removeHooks()
             } else {
-                try? watcher.installer.install()
+                watcher.installHooks()
             }
-            watcher.hooksInstalled = watcher.installer.isInstalled()
         }
         Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
     }
