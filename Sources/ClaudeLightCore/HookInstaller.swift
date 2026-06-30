@@ -10,9 +10,11 @@ public let claudeLightHookRegistrations: [(event: String, matcher: String?)] = [
     ("Notification", "elicitation_dialog"),
 ]
 
-public let claudeLightHookEvents: [String] = [
-    "SessionStart", "UserPromptSubmit", "PreToolUse", "Stop", "SessionEnd", "Notification"
-]
+// Derived from the registrations so the two can never drift out of sync.
+public let claudeLightHookEvents: [String] = {
+    var seen = Set<String>()
+    return claudeLightHookRegistrations.map(\.event).filter { seen.insert($0).inserted }
+}()
 
 private func groupCommands(_ group: [String: Any]) -> [String] {
     (group["hooks"] as? [[String: Any]] ?? []).compactMap { $0["command"] as? String }
