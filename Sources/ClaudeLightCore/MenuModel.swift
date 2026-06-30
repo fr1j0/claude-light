@@ -54,3 +54,14 @@ public func sortedForMenu(_ sessions: [Session]) -> [Session] {
         return a.project < b.project
     }
 }
+
+/// Compact relative-age label for a session row.
+public func relativeTime(secondsAgo: TimeInterval) -> String {
+    let s = max(0, Int(secondsAgo))
+    if s < 60 { return "\(s)s" }
+    let m = s / 60
+    if m < 60 { return "\(m)m" }
+    let h = m / 60
+    if h < 24 { return "\(h)h" }
+    return "\(h / 24)d"
+}

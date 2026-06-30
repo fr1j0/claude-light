@@ -37,4 +37,15 @@ extension MenuModelTests {
         let order = sortedForMenu(input).map { "\($0.status.rawValue):\($0.project)" }
         XCTAssertEqual(order, ["attention:m", "waiting:k", "running:a", "running:b", "idle:z"])
     }
+
+    func test_relativeTime_boundaries() {
+        XCTAssertEqual(relativeTime(secondsAgo: -5), "0s")
+        XCTAssertEqual(relativeTime(secondsAgo: 0), "0s")
+        XCTAssertEqual(relativeTime(secondsAgo: 59), "59s")
+        XCTAssertEqual(relativeTime(secondsAgo: 60), "1m")
+        XCTAssertEqual(relativeTime(secondsAgo: 3599), "59m")
+        XCTAssertEqual(relativeTime(secondsAgo: 3600), "1h")
+        XCTAssertEqual(relativeTime(secondsAgo: 86399), "23h")
+        XCTAssertEqual(relativeTime(secondsAgo: 86400), "1d")
+    }
 }
