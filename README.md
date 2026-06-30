@@ -6,6 +6,14 @@
 
 <p align="center">A native macOS menu-bar app that shows the status of your Claude Code sessions at a glance.</p>
 
+<p align="center">
+  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge"></a>
+  <img alt="Platform: macOS 13+" src="https://img.shields.io/badge/macOS-13%2B-000000?style=for-the-badge&logo=apple&logoColor=white">
+  <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-F05138?style=for-the-badge&logo=swift&logoColor=white">
+  <a href="https://github.com/fr1j0/claude-light/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/fr1j0/claude-light?style=for-the-badge&color=34C759"></a>
+  <img alt="Made for Claude Code" src="https://img.shields.io/badge/Made_for-Claude_Code-D97757?style=for-the-badge">
+</p>
+
 ## What It Does
 
 Claude Light monitors all your Claude Code sessions and displays a traffic-light status in the menu bar:
