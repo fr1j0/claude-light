@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/traffic-light.png" alt="Claude Light" height="150">
+  <img src="assets/traffic-light.svg" alt="Claude Light" height="150">
 </p>
 
 <h1 align="center">Claude Light</h1>
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/menu-states.png" alt="Menu-bar states: needs you, working, idle, no sessions" width="560">
+  <img src="assets/state-colors.svg" alt="Status colors: needs you (red), working (orange), idle (green)" width="420">
 </p>
 
 ## Overview
@@ -23,6 +23,10 @@
 Claude Light watches every Claude Code session on your Mac and distills them into a single traffic light in the menu bar. One glance tells you whether an agent is waiting on you, still working, or done — no alt-tabbing through terminals to find out.
 
 ## At a Glance
+
+<p align="center">
+  <img src="assets/menu-states.svg" alt="Menu-bar icon states: needs you, working, idle, no sessions" width="520">
+</p>
 
 The menu-bar icon reflects the most urgent state across all your sessions:
 
