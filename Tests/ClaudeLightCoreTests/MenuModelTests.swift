@@ -23,6 +23,9 @@ final class MenuModelTests: XCTestCase {
     func test_summary_idleOnly() {
         XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 4)), "Idle")
     }
+    func test_summary_workingOnly() {
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 2, idle: 0)), "2 working")
+    }
 }
 
 extension MenuModelTests {
