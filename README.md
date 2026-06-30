@@ -4,7 +4,7 @@
 
 <h1 align="center">Claude Light</h1>
 
-<p align="center">A native macOS menu-bar app that shows the status of your Claude Code sessions at a glance.</p>
+<p align="center">A native macOS menu-bar traffic light for your Claude Code sessions — see what needs you, at a glance.</p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge"></a>
@@ -14,31 +14,53 @@
   <img alt="Made for Claude Code" src="https://img.shields.io/badge/Made_for-Claude_Code-D97757?style=for-the-badge">
 </p>
 
-## What It Does
+<p align="center">
+  <img src="assets/menu-states.png" alt="Menu-bar states: needs you, working, idle, no sessions" width="560">
+</p>
 
-Claude Light monitors all your Claude Code sessions and displays a traffic-light status in the menu bar:
+## Overview
 
-- **🔴 Red** — an agent needs your input (permission prompt / waiting on you)
-- **🟠 Orange** — an agent is running
-- **🟢 Green** — idle or finished, ready for the next task
+Claude Light watches every Claude Code session on your Mac and distills them into a single traffic light in the menu bar. One glance tells you whether an agent is waiting on you, still working, or done — no alt-tabbing through terminals to find out.
 
-When you have multiple sessions running, the menu-bar icon shows the aggregate status (red wins), and the dropdown lists each session individually with its current state and project name.
+## At a Glance
+
+The menu-bar icon reflects the most urgent state across all your sessions:
+
+| Lamp | Meaning | Motion |
+|------|---------|--------|
+| Top — red | A session needs you: a question or permission prompt is waiting | Blinks |
+| Middle — orange | At least one session is actively working | Gentle pulse |
+| Bottom — green | Sessions are idle; nothing needs you | Steady |
+| All dim | No live sessions | Steady |
+
+Red always wins the aggregate, so a single waiting session is never buried behind busy ones. Motion is reserved for the menu bar — a blink to pull your eye when a session needs a reply, a soft pulse while work is underway — and state is conveyed by lamp position as well as color.
+
+## The Dropdown
+
+Click the icon for the full picture:
+
+- A one-line summary header, such as `1 needs you · 2 working`.
+- Every live session, sorted by urgency (needs-you first), each with a colored status dot, its project name, what it's doing, and how long ago it last changed.
+- One-click install or removal of the Claude Code hooks, and quit.
+
+## Features
+
+- Native menu-bar app — lightweight, no dock icon, no window.
+- Aggregate traffic light across any number of concurrent sessions.
+- A distinct, chunky traffic-light icon that adapts to light and dark menu bars.
+- Live updates via filesystem events — the display reacts within a fraction of a second.
+- No polling, no network, no telemetry.
+- Zero configuration beyond a one-click hook install.
 
 ## How It Works
 
-Claude Light integrates with Claude Code through a simple hook shim that writes session state to `~/.claude-light/sessions/`. The app watches this folder and updates its display whenever a session changes.
+Claude Light integrates with Claude Code through a small hook shim. On each Claude Code hook event, the shim writes that session's state to `~/.claude-light/sessions/`. The app watches that folder and updates its display the moment anything changes.
 
-**Installation flow:**
-1. Install Claude Light from Homebrew or GitHub Releases.
-2. Launch the app — a menu-bar icon appears.
-3. Click "Install Claude Code hooks" to wire the hook shim into `~/.claude/settings.json`.
-4. Your next Claude Code prompt will light up the menu.
-
-For the full technical design, see [docs/superpowers/specs/2026-06-30-claude-light-design.md](docs/superpowers/specs/2026-06-30-claude-light-design.md).
+For the full technical design, see the specs under [`docs/superpowers/specs/`](docs/superpowers/specs/).
 
 ## Installation
 
-### Via Homebrew (Recommended)
+### Homebrew (recommended)
 
 ```bash
 brew tap fr1j0/claude-light
@@ -47,22 +69,30 @@ brew install --cask claude-light
 
 ### From GitHub Releases
 
-Download the latest notarized `.app` from [GitHub Releases](https://github.com/fr1j0/claude-light/releases). Verify the SHA-256 checksum against the published value to confirm authenticity.
+Download the latest notarized `.app` from [GitHub Releases](https://github.com/fr1j0/claude-light/releases) and verify the published SHA-256 checksum to confirm authenticity.
 
 ## First Run
 
-1. Launch Claude Light.
-2. Click the menu-bar icon.
-3. Select **"Install Claude Code hooks"** — this safely merges hook entries into your `~/.claude/settings.json`.
-4. Click "Remove hooks" at any time to cleanly uninstall.
+1. Launch Claude Light — a traffic-light icon appears in the menu bar.
+2. Click the icon and choose **Install Claude Code hooks**. This safely merges the hook entries into `~/.claude/settings.json`.
+3. Your next Claude Code prompt lights up the menu.
+4. **Remove Claude Code hooks** cleanly undoes the change at any time.
+
+## Build from Source
+
+Requires Swift 5.9+ and macOS 13+.
+
+```bash
+swift build -c release          # build the app and hook binaries
+swift test                      # run the test suite
+bash scripts/package-app.sh     # produce dist/Claude Light.app
+```
 
 ## Security & Trust
 
-Claude Light is open source and auditable — because it edits your settings and runs on every Claude Code hook, you can read the source and verify it's safe.
+Claude Light edits your settings and runs on every Claude Code hook, so it is fully open source and auditable — read the source and verify it for yourself. Official builds are signed and notarized with the maintainer's Apple Developer ID, which removes the "unidentified developer" warning and guarantees the binary has not been tampered with.
 
-**Install only from official Releases** at https://github.com/fr1j0/claude-light/releases. The official build is signed and notarized by the maintainer's Apple Developer ID, removing both the "unidentified developer" warning and the risk of tampering.
-
-Always verify the published SHA-256 checksum before running the app.
+Install only from the official [Releases](https://github.com/fr1j0/claude-light/releases), and verify the published SHA-256 checksum before running.
 
 ## License & Trademark
 
