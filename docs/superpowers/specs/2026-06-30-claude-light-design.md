@@ -1,4 +1,4 @@
-# Claude Status Light — Design
+# Claude Light — Design
 
 **Date:** 2026-06-30
 **Status:** Approved design, pre-implementation
@@ -41,7 +41,7 @@ All are easy to add later if anyone asks; none are needed to be useful.
 Five small, independently-testable units:
 
 ### 1. Hook shim
-One tiny script (`claude-statuslight-hook`) that every Claude Code hook invokes.
+One tiny script (`claude-light-hook`) that every Claude Code hook invokes.
 It reads the hook JSON from stdin (for `session_id` and `cwd`), takes a status
 argument, and writes/updates/deletes exactly one session file. Single responsibility.
 
@@ -49,7 +49,7 @@ For the `Notification` hook it also inspects the payload's `message` to discrimi
 permission requests (→ red) from the idle "waiting for your input" nudge (→ ignore).
 
 ### 2. Status store
-A folder, `~/.claude-statuslight/sessions/`, holding one JSON file per session:
+A folder, `~/.claude-light/sessions/`, holding one JSON file per session:
 
 ```json
 {
@@ -141,7 +141,7 @@ and fakes are legally barred from wearing your name.
 
 ## Install flow (make-or-break UX)
 
-1. `brew tap <owner>/claude-statuslight && brew install --cask claude-statuslight`
+1. `brew tap fr1j0/claude-light && brew install --cask claude-light`
    (or download the notarized `.app` from Releases).
 2. Launch → menu-bar icon appears. First-run panel: **"Install Claude Code hooks?"**
    → click merges hook entries into `~/.claude/settings.json` and drops the shim.
