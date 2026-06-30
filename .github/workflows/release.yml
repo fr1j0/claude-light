@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-14
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: swift test
+
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "$MACOS_CERT_P12" | base64 --decode -o "$CERT_PATH"
+          security import "$CERT_PATH" \
+            -P "$MACOS_CERT_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+      - name: Build and package app
+        run: bash scripts/package-app.sh
+
+      - name: Sign app
+        env:
+          MACOS_CERT_IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}
+        run: |
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_CERT_IDENTITY" \
+            "dist/Claude Light.app/Contents/MacOS/claude-light-hook"
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_CERT_IDENTITY" \
+            "dist/Claude Light.app/Contents/MacOS/ClaudeLightApp"
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_CERT_IDENTITY" \
+            "dist/Claude Light.app"
+
+      - name: Create zip for notarization
+        run: |
+          ditto -c -k --keepParent "dist/Claude Light.app" dist/claude-light.zip
+
+      - name: Notarize app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          xcrun notarytool submit dist/claude-light.zip \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait
+
+      - name: Staple notarization ticket
+        run: |
+          xcrun stapler staple "dist/Claude Light.app"
+
+      - name: Re-zip with stapled app
+        run: |
+          rm -f dist/claude-light.zip
+          ditto -c -k --keepParent "dist/Claude Light.app" dist/claude-light.zip
+
+      - name: Generate checksum
+        run: |
+          shasum -a 256 dist/claude-light.zip > dist/claude-light.zip.sha256
+          cat dist/claude-light.zip.sha256
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/claude-light.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/claude-light.zip
+            dist/claude-light.zip.sha256
