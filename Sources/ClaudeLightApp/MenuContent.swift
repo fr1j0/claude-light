@@ -25,15 +25,42 @@ struct MenuContent: View {
                         Text(rowText(for: session))
                     } icon: {
                         if session.status == .error {
-                            Image(nsImage: Self.warningTriangle)
+                            Image(nsImage: Self.warningTriangle())
                         } else {
                             Image(nsImage: Self.dot(color(for: session.status)))
+                        }
+                    }
+                }
+                if let list = watcher.subagentsBySession[session.sessionID] {
+                    ForEach(list.visible, id: \.id) { subagent in
+                        Button {
+                        } label: {
+                            Label {
+                                Text(subagent.label)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                            } icon: {
+                                // Only a failure is marked; running rows carry a
+                                // transparent spacer so their titles stay aligned.
+                                Image(nsImage: subagent.state == .failed
+                                      ? Self.subagentFailedIcon : Self.subagentBlankIcon)
+                            }
+                        }
+                    }
+                    if list.overflowRunning > 0 {
+                        Label {
+                            Text("+\(list.overflowRunning) more running")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.tertiary)
+                        } icon: {
+                            Image(nsImage: Self.subagentBlankIcon)
                         }
                     }
                 }
             }
         }
         Divider()
+        Toggle("Show subagents", isOn: $watcher.showSubagents)
         Button(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
             if watcher.hooksInstalled {
                 watcher.removeHooks()
@@ -43,6 +70,24 @@ struct MenuContent: View {
         }
         Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
     }
+
+    /// Indent (points) applied to subagent rows so their marker sits right of the
+    /// parent's — menus place the icon at a fixed x, so we bake the inset into the image.
+    static let subagentIndent: CGFloat = 16
+
+    /// Smaller warning triangle for indented subagent rows (parent triangle is 11pt).
+    static let subagentTrianglePointSize: CGFloat = 9
+
+    /// The only marked subagent state: a failure. Running rows use a same-size
+    /// transparent spacer so every subagent title lines up under the parent.
+    private static let subagentFailedIcon = warningTriangle(
+        leadingInset: subagentIndent, pointSize: subagentTrianglePointSize)
+    private static let subagentBlankIcon: NSImage = {
+        let img = NSImage(size: subagentFailedIcon.size)
+        img.lockFocus(); img.unlockFocus()   // materialize a transparent rep of the right size
+        img.isTemplate = false
+        return img
+    }()
 
     /// Filled colored dot as a NON-template image (menus coerce templates to mono).
     private static func dot(_ color: NSColor) -> NSImage {
@@ -56,20 +101,22 @@ struct MenuContent: View {
         return image
     }
 
-    /// Red-tinted `exclamationmark.triangle.fill`, non-template.
-    private static let warningTriangle: NSImage = {
-        let cfg = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+    /// Red-tinted `exclamationmark.triangle.fill`, non-template. `leadingInset`
+    /// prepends transparent space to indent the whole row; smaller `pointSize`
+    /// marks a child (subagent) row.
+    private static func warningTriangle(leadingInset: CGFloat = 0, pointSize: CGFloat = 11) -> NSImage {
+        let cfg = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
         let base = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "error")?
             .withSymbolConfiguration(cfg) ?? NSImage()
-        let out = NSImage(size: base.size)
+        let out = NSImage(size: NSSize(width: base.size.width + leadingInset, height: base.size.height))
         out.lockFocus()
-        base.draw(at: .zero, from: .zero, operation: .sourceOver, fraction: 1)
+        base.draw(at: NSPoint(x: leadingInset, y: 0), from: .zero, operation: .sourceOver, fraction: 1)
         red.set()
-        NSRect(origin: .zero, size: base.size).fill(using: .sourceAtop)
+        NSRect(x: leadingInset, y: 0, width: base.size.width, height: base.size.height).fill(using: .sourceAtop)
         out.unlockFocus()
         out.isTemplate = false
         return out
-    }()
+    }
 
     private var headerColor: NSColor {
         if watcher.icon.red != .off { return Self.red }
