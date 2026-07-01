@@ -1,0 +1,44 @@
+import XCTest
+@testable import ClaudeLightCore
+
+final class FocusStrategyTests: XCTestCase {
+    func test_terminalApp_withTTY_focusesTabByTTY() {
+        XCTAssertEqual(focusStrategy(termProgram: "Apple_Terminal", tty: "ttys008"),
+                       .terminalApp(tty: "ttys008"))
+    }
+
+    func test_iterm_withTTY_focusesSessionByTTY() {
+        XCTAssertEqual(focusStrategy(termProgram: "iTerm.app", tty: "ttys003"),
+                       .iterm(tty: "ttys003"))
+    }
+
+    func test_terminalApp_withoutTTY_fallsBackToActivate() {
+        XCTAssertEqual(focusStrategy(termProgram: "Apple_Terminal", tty: nil),
+                       .activateApp(bundleID: "com.apple.Terminal"))
+        XCTAssertEqual(focusStrategy(termProgram: "Apple_Terminal", tty: ""),
+                       .activateApp(bundleID: "com.apple.Terminal"))
+    }
+
+    func test_iterm_withoutTTY_fallsBackToActivate() {
+        XCTAssertEqual(focusStrategy(termProgram: "iTerm.app", tty: ""),
+                       .activateApp(bundleID: "com.googlecode.iterm2"))
+    }
+
+    func test_warp_activatesApp_neverPreciseTab() {
+        XCTAssertEqual(focusStrategy(termProgram: "WarpTerminal", tty: "ttys008"),
+                       .activateApp(bundleID: "dev.warp.Warp-Stable"))
+    }
+
+    func test_vscode_activatesApp() {
+        XCTAssertEqual(focusStrategy(termProgram: "vscode", tty: "ttys008"),
+                       .activateApp(bundleID: "com.microsoft.VSCode"))
+    }
+
+    func test_unknownTerminal_isNone() {
+        XCTAssertEqual(focusStrategy(termProgram: "Hyper", tty: "ttys008"), .none)
+    }
+
+    func test_nilTermProgram_isNone() {
+        XCTAssertEqual(focusStrategy(termProgram: nil, tty: "ttys008"), .none)
+    }
+}

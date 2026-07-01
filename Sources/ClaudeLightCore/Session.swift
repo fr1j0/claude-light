@@ -15,15 +15,23 @@ public struct Session: Codable, Sendable, Equatable {
     public var cwd: String
     public var updatedAt: Date
     public var transcriptPath: String?
+    // Hosting-terminal identity, for focusing the session on click (#22).
+    public var termProgram: String?
+    public var tty: String?
+    public var termSessionId: String?
 
     public init(sessionID: String, status: SessionStatus, project: String, cwd: String,
-                updatedAt: Date, transcriptPath: String? = nil) {
+                updatedAt: Date, transcriptPath: String? = nil,
+                termProgram: String? = nil, tty: String? = nil, termSessionId: String? = nil) {
         self.sessionID = sessionID
         self.status = status
         self.project = project
         self.cwd = cwd
         self.updatedAt = updatedAt
         self.transcriptPath = transcriptPath
+        self.termProgram = termProgram
+        self.tty = tty
+        self.termSessionId = termSessionId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -33,6 +41,9 @@ public struct Session: Codable, Sendable, Equatable {
         case cwd
         case updatedAt = "updated_at"
         case transcriptPath = "transcript_path"
+        case termProgram = "term_program"
+        case tty
+        case termSessionId = "term_session_id"
     }
 }
 
