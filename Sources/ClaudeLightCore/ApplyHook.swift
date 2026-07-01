@@ -8,14 +8,42 @@ public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date,
         try store.delete(sessionID: payload.sessionID)
     case .set(let status):
         let cwd = payload.cwd ?? ""
-        let project = cwd.isEmpty ? "unknown" : URL(fileURLWithPath: cwd).lastPathComponent
         let session = Session(
             sessionID: payload.sessionID,
             status: status,
-            project: project,
+            project: projectName(forCwd: cwd),
             cwd: cwd,
             updatedAt: now
         )
         try store.write(session)
     }
+}
+
+/// Display name for a session, derived from its working directory's basename.
+/// Sessions rooted in a system temp directory (e.g. macOS `$TMPDIR` at
+/// `/var/folders/.../T`, or `/tmp`) are labeled "temp" rather than the bare,
+/// confusing folder name (which for `$TMPDIR` is just "T").
+public func projectName(forCwd cwd: String) -> String {
+    if cwd.isEmpty { return "unknown" }
+    if isTemporaryPath(cwd) { return "temp" }
+    return URL(fileURLWithPath: cwd).lastPathComponent
+}
+
+/// True when `cwd` lives inside a system temporary directory.
+func isTemporaryPath(_ cwd: String) -> Bool {
+    var path = cwd
+    while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+
+    if path == "/tmp" || path.hasPrefix("/tmp/") { return true }
+    if path == "/private/tmp" || path.hasPrefix("/private/tmp/") { return true }
+
+    // macOS per-user temp lives under /var/folders/<x>/<y>/T[/...] (also via /private).
+    // The sibling "C" directory holds caches, not temp, so match the "T" component only.
+    if path.contains("/var/folders/") {
+        let comps = path.split(separator: "/").map(String.init)
+        if let folders = comps.firstIndex(of: "folders") {
+            return comps[(folders + 1)...].contains("T")
+        }
+    }
+    return false
 }
