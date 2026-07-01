@@ -1,6 +1,7 @@
 import Foundation
 
-public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date, transcriptJSONL: String? = nil) throws {
+public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date,
+                      transcriptJSONL: String? = nil, terminal: TerminalContext? = nil) throws {
     switch action(for: payload, transcriptJSONL: transcriptJSONL) {
     case .ignore:
         return
@@ -14,7 +15,10 @@ public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date,
             project: projectName(forCwd: cwd),
             cwd: cwd,
             updatedAt: now,
-            transcriptPath: payload.transcriptPath
+            transcriptPath: payload.transcriptPath,
+            termProgram: terminal?.termProgram,
+            tty: terminal?.tty,
+            termSessionId: terminal?.termSessionId
         )
         try store.write(session)
     }

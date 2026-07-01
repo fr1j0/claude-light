@@ -40,6 +40,17 @@ final class ApplyHookTests: XCTestCase {
         XCTAssertEqual(try store.loadAll().first?.project, "unknown")
     }
 
+    func test_applyHook_persistsTerminalContext() throws {
+        let store = tempStore()
+        let p = HookPayload(sessionID: "s1", hookEventName: "UserPromptSubmit", cwd: "/x/p", message: nil)
+        let terminal = TerminalContext(termProgram: "iTerm.app", tty: "ttys004", termSessionId: "w0t1p0:UUID")
+        try applyHook(p, to: store, now: now, terminal: terminal)
+        let s = try XCTUnwrap(try store.loadAll().first)
+        XCTAssertEqual(s.termProgram, "iTerm.app")
+        XCTAssertEqual(s.tty, "ttys004")
+        XCTAssertEqual(s.termSessionId, "w0t1p0:UUID")
+    }
+
     func test_applyHook_persistsTranscriptPath() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let store = SessionStore(directory: dir)

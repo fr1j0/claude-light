@@ -16,6 +16,8 @@
     <string>0.3.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Claude Light brings the terminal tab running a Claude Code session to the front when you click it in the menu.</string>
     <key>LSUIElement</key>
     <true/>
 </dict>

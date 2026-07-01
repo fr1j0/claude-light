@@ -20,6 +20,7 @@ struct MenuContent: View {
             }
             ForEach(watcher.sessions, id: \.sessionID) { session in
                 Button {
+                    TerminalFocuser.focus(session)
                 } label: {
                     Label {
                         Text(rowText(for: session))
