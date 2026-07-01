@@ -19,15 +19,16 @@ struct MenuContent: View {
                 Divider()
             }
             ForEach(watcher.sessions, id: \.sessionID) { session in
-                // Rendered as a Button so the row text shows at full brightness
-                // (a bare Label renders as a muted, disabled-looking menu item).
-                // No action is wired yet — clicking just dismisses the menu.
                 Button {
                 } label: {
                     Label {
                         Text(rowText(for: session))
                     } icon: {
-                        Image(nsImage: Self.dot(color(for: session.status)))
+                        if session.status == .error {
+                            Image(nsImage: Self.warningTriangle)
+                        } else {
+                            Image(nsImage: Self.dot(color(for: session.status)))
+                        }
                     }
                 }
             }
@@ -43,37 +44,51 @@ struct MenuContent: View {
         Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
     }
 
-    /// Renders the status dot as a NON-template NSImage so the menu keeps the
-    /// real color. SF Symbols are coerced to monochrome template images inside a
-    /// menu, which is why `foregroundStyle` was ignored on the colored dots.
+    /// Filled colored dot as a NON-template image (menus coerce templates to mono).
     private static func dot(_ color: NSColor) -> NSImage {
-        let diameter: CGFloat = 9
-        let image = NSImage(size: NSSize(width: diameter, height: diameter))
+        let d: CGFloat = 9
+        let image = NSImage(size: NSSize(width: d, height: d))
         image.lockFocus()
         color.setFill()
-        NSBezierPath(ovalIn: NSRect(x: 0, y: 0, width: diameter, height: diameter)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 0, y: 0, width: d, height: d)).fill()
         image.unlockFocus()
         image.isTemplate = false
         return image
     }
 
+    /// Red-tinted `exclamationmark.triangle.fill`, non-template.
+    private static let warningTriangle: NSImage = {
+        let cfg = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+        let base = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "error")?
+            .withSymbolConfiguration(cfg) ?? NSImage()
+        let out = NSImage(size: base.size)
+        out.lockFocus()
+        base.draw(at: .zero, from: .zero, operation: .sourceOver, fraction: 1)
+        red.set()
+        NSRect(origin: .zero, size: base.size).fill(using: .sourceAtop)
+        out.unlockFocus()
+        out.isTemplate = false
+        return out
+    }()
+
     private var headerColor: NSColor {
-        switch watcher.icon.lamp {
-        case .red: return Self.red
-        case .orange: return Self.orange
-        case .green: return Self.green
-        case .off: return .secondaryLabelColor
-        }
+        if watcher.icon.red != .off { return Self.red }
+        if watcher.icon.orange != .off { return Self.orange }
+        if watcher.icon.green != .off { return Self.green }
+        return .secondaryLabelColor
     }
 
     private func rowText(for session: Session) -> String {
-        let age = relativeTime(secondsAgo: Date().timeIntervalSince(session.updatedAt))
-        return "\(session.project) — \(friendlyLabel(for: session.status)) · \(age)"
+        if session.status == .error {
+            let reason = watcher.errorReasons[session.sessionID] ?? "api error"
+            return "\(session.project) — API error: \(reason)"
+        }
+        return "\(session.project) — \(friendlyLabel(for: session.status))"
     }
 
     private func color(for status: SessionStatus) -> NSColor {
         switch status {
-        case .error, .waiting, .attention: return Self.red
+        case .waiting, .attention, .error: return Self.red
         case .running: return Self.orange
         case .idle: return Self.green
         }
@@ -81,15 +96,14 @@ struct MenuContent: View {
 
     private func friendlyLabel(for status: SessionStatus) -> String {
         switch status {
-        case .error: return "error"
         case .running: return "running"
         case .waiting: return "waiting for permission"
         case .attention: return "awaiting your reply"
         case .idle: return "idle"
+        case .error: return "API error"
         }
     }
 
-    // Match the lit-lamp colors used by TrafficLightIcon.
     private static let red = NSColor(srgbRed: 1.00, green: 0.23, blue: 0.19, alpha: 1)
     private static let orange = NSColor(srgbRed: 1.00, green: 0.58, blue: 0.00, alpha: 1)
     private static let green = NSColor(srgbRed: 0.20, green: 0.78, blue: 0.35, alpha: 1)
