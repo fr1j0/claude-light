@@ -60,16 +60,41 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Toggle("Show subagents", isOn: $watcher.showSubagents)
-        Button(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
+        // A Button (not a Toggle) so the menu doesn't reserve a checkmark "state"
+        // column — that column is what pushes every icon/dot right. We show the
+        // on/off state with a checkbox glyph in the same icon column as the others.
+        Button {
+            watcher.showSubagents.toggle()
+        } label: {
+            Label("Show subagents",
+                  systemImage: watcher.showSubagents ? "checkmark.square.fill" : "square")
+        }
+        Button {
             if watcher.hooksInstalled {
                 watcher.removeHooks()
             } else {
                 watcher.installHooks()
             }
+        } label: {
+            Label(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks",
+                  systemImage: "link")
         }
-        Button("Quit Claude Light") { NSApplication.shared.terminate(nil) }
+        Button {
+            NSApplication.shared.terminate(nil)
+        } label: {
+            Label("Quit Claude Light", systemImage: "power")
+        }
+        if let version = Self.appVersion {
+            Divider()
+            Text("Claude Light v\(version)")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+        }
     }
+
+    /// The running app's marketing version (CFBundleShortVersionString), e.g. "0.4.0".
+    private static let appVersion: String? =
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
 
     /// Indent (points) applied to subagent rows so their marker sits right of the
     /// parent's — menus place the icon at a fixed x, so we bake the inset into the image.
