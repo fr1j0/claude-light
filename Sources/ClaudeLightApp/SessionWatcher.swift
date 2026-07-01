@@ -13,7 +13,16 @@ final class SessionWatcher: ObservableObject {
     @Published private(set) var summary: String? = nil
     @Published private(set) var animationPhase: Double = 0
     @Published private(set) var isDarkMenuBar: Bool = true
+    @Published private(set) var runnersBySession: [String: RunnerList] = [:]
+    /// Opt-in: show a running session's parallel runners as indented rows.
+    @Published var showRunners: Bool {
+        didSet {
+            UserDefaults.standard.set(showRunners, forKey: Self.showRunnersKey)
+            reload()
+        }
+    }
 
+    private static let showRunnersKey = "showRunners"
     private let store: SessionStore
     private let installer: HookInstaller
     private var stream: FSEventStreamRef?
@@ -25,6 +34,7 @@ final class SessionWatcher: ObservableObject {
     init(store: SessionStore, installer: HookInstaller) {
         self.store = store
         self.installer = installer
+        self.showRunners = UserDefaults.standard.bool(forKey: Self.showRunnersKey)
     }
 
     /// Call exactly once. Idempotent: subsequent calls are no-ops.
@@ -57,17 +67,24 @@ final class SessionWatcher: ObservableObject {
         let all = (try? store.loadAll()) ?? []
         var live = liveSessions(all, now: Date())
         var reasons: [String: String] = [:]
+        var runnerMap: [String: RunnerList] = [:]
         for i in live.indices where live[i].status == .running {
-            if let path = live[i].transcriptPath,
-               let tail = transcriptTail(path: path),
+            guard let path = live[i].transcriptPath else { continue }
+            if let tail = transcriptTail(path: path),
                let reason = apiErrorReason(transcriptJSONL: tail) {
                 live[i].status = .error
                 reasons[live[i].sessionID] = reason
+                continue                                  // errored → not a running runner host
+            }
+            if showRunners, let wide = transcriptTail(path: path, maxBytes: 4 * 1024 * 1024) {
+                let list = runners(fromTranscript: wide)
+                if !list.isEmpty { runnerMap[live[i].sessionID] = list }
             }
         }
         let sorted = sortedForMenu(live)
         self.sessions = sorted
         self.errorReasons = reasons
+        self.runnersBySession = runnerMap
         let state = iconState(for: sorted)
         self.icon = state
         self.summary = summaryText(for: statusCounts(for: sorted))

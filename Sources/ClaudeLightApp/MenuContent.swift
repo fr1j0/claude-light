@@ -31,9 +31,29 @@ struct MenuContent: View {
                         }
                     }
                 }
+                if let list = watcher.runnersBySession[session.sessionID] {
+                    ForEach(list.visible, id: \.id) { runner in
+                        Button {
+                        } label: {
+                            Label {
+                                Text("    " + runner.label).foregroundStyle(.secondary)
+                            } icon: {
+                                if runner.state == .failed {
+                                    Image(nsImage: Self.warningTriangle)
+                                } else {
+                                    Image(nsImage: Self.dot(Self.orange))
+                                }
+                            }
+                        }
+                    }
+                    if list.overflowRunning > 0 {
+                        Text("    +\(list.overflowRunning) more running").foregroundStyle(.secondary)
+                    }
+                }
             }
         }
         Divider()
+        Toggle("Show runners", isOn: $watcher.showRunners)
         Button(watcher.hooksInstalled ? "Remove Claude Code hooks" : "Install Claude Code hooks") {
             if watcher.hooksInstalled {
                 watcher.removeHooks()
