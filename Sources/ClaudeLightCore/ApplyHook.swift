@@ -13,7 +13,8 @@ public func applyHook(_ payload: HookPayload, to store: SessionStore, now: Date,
             status: status,
             project: projectName(forCwd: cwd),
             cwd: cwd,
-            updatedAt: now
+            updatedAt: now,
+            transcriptPath: payload.transcriptPath
         )
         try store.write(session)
     }
