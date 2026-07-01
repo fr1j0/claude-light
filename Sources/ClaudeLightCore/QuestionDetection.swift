@@ -1,9 +1,27 @@
 import Foundation
 
-/// Heuristic: the assistant's final text reads as a question awaiting a reply
-/// if, after trimming trailing whitespace, its last character is '?'.
+/// Heuristic: the assistant's final text reads as a *blocking* question awaiting
+/// a reply. To avoid false "awaiting your reply" flags we require it to be a
+/// concise question, not a long deliverable that merely trails off into one:
+///  - ignore code (a `?` inside fenced/inline code isn't a question to the user),
+///  - only flag when the remaining prose is short and ends with `?`.
 public func textEndsWithQuestion(_ text: String) -> Bool {
-    text.trimmingCharacters(in: .whitespacesAndNewlines).last == "?"
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    // A long turn that happens to end with a question is a check-in, not a block.
+    guard trimmed.count <= questionMaxLength else { return false }
+    let prose = strippingCode(trimmed).trimmingCharacters(in: .whitespacesAndNewlines)
+    return prose.last == "?"
+}
+
+/// Upper bound (characters) for treating a turn as a pending question. Tunable.
+private let questionMaxLength = 240
+
+/// Remove fenced ```code``` blocks and `inline` code spans so a `?` inside code
+/// isn't mistaken for a question.
+private func strippingCode(_ s: String) -> String {
+    var t = s.replacingOccurrences(of: "```[\\s\\S]*?```", with: " ", options: .regularExpression)
+    t = t.replacingOccurrences(of: "`[^`]*`", with: " ", options: .regularExpression)
+    return t
 }
 
 /// Best-effort extraction of the LAST assistant message's text from a Claude Code
