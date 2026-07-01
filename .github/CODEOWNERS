@@ -1,0 +1,3 @@
+# Default code owner for everything in this repo.
+# Enables the "require code-owner review" branch-protection rule on main.
+* @fr1j0
