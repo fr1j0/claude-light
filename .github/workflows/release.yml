@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+# Signing + notarization run only when the repo variable NOTARIZE == 'true'.
+# Until Apple enables notarization for the team, leave NOTARIZE unset to ship an
+# interim UNSIGNED build (marked as a pre-release). Flip NOTARIZE to 'true' once
+# notarization works — no workflow edit needed.
 jobs:
   release:
     runs-on: macos-14
@@ -21,6 +25,7 @@ jobs:
         run: swift test
 
       - name: Import Developer ID certificate
+        if: ${{ vars.NOTARIZE == 'true' }}
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
           MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
@@ -46,6 +51,7 @@ jobs:
         run: bash scripts/package-app.sh
 
       - name: Sign app
+        if: ${{ vars.NOTARIZE == 'true' }}
         env:
           MACOS_CERT_IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}
         run: |
@@ -59,11 +65,12 @@ jobs:
             --sign "$MACOS_CERT_IDENTITY" \
             "dist/Claude Light.app"
 
-      - name: Create zip for notarization
+      - name: Create zip
         run: |
           ditto -c -k --keepParent "dist/Claude Light.app" dist/claude-light.zip
 
       - name: Notarize app
+        if: ${{ vars.NOTARIZE == 'true' }}
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -76,10 +83,12 @@ jobs:
             --wait
 
       - name: Staple notarization ticket
+        if: ${{ vars.NOTARIZE == 'true' }}
         run: |
           xcrun stapler staple "dist/Claude Light.app"
 
       - name: Re-zip with stapled app
+        if: ${{ vars.NOTARIZE == 'true' }}
         run: |
           rm -f dist/claude-light.zip
           ditto -c -k --keepParent "dist/Claude Light.app" dist/claude-light.zip
@@ -89,6 +98,15 @@ jobs:
           shasum -a 256 dist/claude-light.zip > dist/claude-light.zip.sha256
           cat dist/claude-light.zip.sha256
 
+      - name: Compose release notes
+        id: notes
+        run: |
+          if [ "${{ vars.NOTARIZE }}" = "true" ]; then
+            echo "body=Signed with Developer ID and notarized by Apple." >> "$GITHUB_OUTPUT"
+          else
+            echo 'body=Interim UNSIGNED build (Apple notarization not yet enabled for this team). First launch: right-click Claude Light.app and choose Open, or run: xattr -dr com.apple.quarantine "Claude Light.app". A signed & notarized release will replace this once notarization is available.' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:
@@ -97,6 +115,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ vars.NOTARIZE != 'true' }}
+          body: ${{ steps.notes.outputs.body }}
           files: |
             dist/claude-light.zip
             dist/claude-light.zip.sha256
