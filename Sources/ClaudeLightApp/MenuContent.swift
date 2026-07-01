@@ -32,19 +32,18 @@ struct MenuContent: View {
                     }
                 }
                 if let list = watcher.subagentsBySession[session.sessionID] {
+                    // Subagents share the parent session's terminal, so their rows are
+                    // status-only (non-interactive) — the parent row is the single pointer.
                     ForEach(list.visible, id: \.id) { subagent in
-                        Button {
-                        } label: {
-                            Label {
-                                Text(subagent.label)
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.tertiary)
-                            } icon: {
-                                // Only a failure is marked; running rows carry a
-                                // transparent spacer so their titles stay aligned.
-                                Image(nsImage: subagent.state == .failed
-                                      ? Self.subagentFailedIcon : Self.subagentBlankIcon)
-                            }
+                        Label {
+                            Text(subagent.label)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.tertiary)
+                        } icon: {
+                            // Only a failure is marked; running rows carry a
+                            // transparent spacer so their titles stay aligned.
+                            Image(nsImage: subagent.state == .failed
+                                  ? Self.subagentFailedIcon : Self.subagentBlankIcon)
                         }
                     }
                     if list.overflowRunning > 0 {
