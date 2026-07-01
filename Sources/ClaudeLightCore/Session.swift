@@ -5,6 +5,7 @@ public enum SessionStatus: String, Codable, Sendable {
     case waiting
     case attention
     case idle
+    case error
 }
 
 public struct Session: Codable, Sendable, Equatable {

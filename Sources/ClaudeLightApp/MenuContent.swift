@@ -73,7 +73,7 @@ struct MenuContent: View {
 
     private func color(for status: SessionStatus) -> NSColor {
         switch status {
-        case .waiting, .attention: return Self.red
+        case .error, .waiting, .attention: return Self.red
         case .running: return Self.orange
         case .idle: return Self.green
         }
@@ -81,6 +81,7 @@ struct MenuContent: View {
 
     private func friendlyLabel(for status: SessionStatus) -> String {
         switch status {
+        case .error: return "error"
         case .running: return "running"
         case .waiting: return "waiting for permission"
         case .attention: return "awaiting your reply"

@@ -9,22 +9,36 @@ final class MenuModelTests: XCTestCase {
 
     func test_counts_bucketsWaitingAndAttentionTogether() {
         let c = statusCounts(for: [s(.waiting), s(.attention), s(.running), s(.idle), s(.idle)])
-        XCTAssertEqual(c, StatusCounts(needYou: 2, working: 1, idle: 2))
+        XCTAssertEqual(c, StatusCounts(needYou: 2, working: 1, idle: 2, error: 0))
     }
     func test_summary_nilWhenEmpty() {
-        XCTAssertNil(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 0)))
+        XCTAssertNil(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 0, error: 0)))
     }
     func test_summary_singularNeedsYou() {
-        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 1, working: 0, idle: 0)), "1 needs you")
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 1, working: 0, idle: 0, error: 0)), "1 needs you")
     }
     func test_summary_pluralAndWorking() {
-        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 2, working: 3, idle: 1)), "2 need you · 3 working")
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 2, working: 3, idle: 1, error: 0)), "2 need you · 3 working")
     }
     func test_summary_idleOnly() {
-        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 4)), "Idle")
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 0, idle: 4, error: 0)), "Idle")
     }
     func test_summary_workingOnly() {
-        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 2, idle: 0)), "2 working")
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 2, idle: 0, error: 0)), "2 working")
+    }
+    func test_counts_includeError() {
+        let c = statusCounts(for: [s(.error), s(.error), s(.running), s(.idle)])
+        XCTAssertEqual(c, StatusCounts(needYou: 0, working: 1, idle: 1, error: 2))
+    }
+    func test_summary_errorsBreakOut() {
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 0, working: 2, idle: 0, error: 1)), "1 error · 2 working")
+        XCTAssertEqual(summaryText(for: StatusCounts(needYou: 1, working: 0, idle: 0, error: 2)), "2 errors · 1 needs you")
+    }
+    func test_sorted_errorFirst() {
+        let order = sortedForMenu([s(.idle, project: "z"), s(.running, project: "r"),
+                                   s(.error, project: "e"), s(.attention, project: "a")])
+            .map { "\($0.status.rawValue):\($0.project)" }
+        XCTAssertEqual(order, ["error:e", "attention:a", "running:r", "idle:z"])
     }
 }
 
