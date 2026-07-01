@@ -3,8 +3,8 @@
 # claude-light.zip.sha256 file).
 
 cask "claude-light" do
-  version "0.4.0"
-  sha256 "c07a5ce42cee74f020691593dd7c5ff808050ce6296b0ee01a3f227c42c4c4d1"
+  version "0.5.0"
+  sha256 "edf3f652b9eaad70fa2495c363d372f44c7973ac223f20d524c493bfe3f50a5d"
 
   url "https://github.com/fr1j0/claude-light/releases/download/v#{version}/claude-light.zip"
   name "Claude Light"
