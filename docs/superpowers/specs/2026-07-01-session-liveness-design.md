@@ -178,16 +178,19 @@ the same image.
 - **No elapsed time.** Rows:
   - `🟠 project — running`
   - `🟢 project — idle`
-  - `🔴 project — API error: <reason>`
+  - `⚠ project — API error: <reason>` — error rows use a **red warning triangle**
+    (not a dot), signalling a possibly-transient problem rather than a hard failure.
   - waiting/attention keep today's labels ("waiting for permission" / "awaiting your
-    reply").
+    reply") with a red dot.
 - **Sort** (`sortedForMenu`): `error (0) → attention (1) → waiting (2) → running (3)
   → idle (4)`, ties by project name.
 - **Summary header** breaks errors out. `statusCounts` gains `error`; header parts in
   order `error`, `needYou` (waiting+attention), `working` — e.g. `1 error · 2 working`;
   idle-only → `Idle`; no sessions → header omitted. Pluralize `"1 error"` / `"N errors"`.
-- Row dots use the existing non-template `NSImage` dot helper (error/waiting/attention
-  → red, running → orange, idle → green).
+- Row icons are non-template `NSImage`s: waiting/attention → red dot, running →
+  orange dot, idle → green dot, and **error → a red-tinted `exclamationmark.triangle.fill`**
+  (SF Symbol rendered to a non-template colored image, since the menu coerces
+  template symbols to monochrome).
 
 ## Architecture / units
 
