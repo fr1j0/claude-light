@@ -2,13 +2,17 @@ import AppKit
 import ClaudeLightCore
 
 /// Draws the fat traffic-light menu-bar glyph: a rounded-rectangle outline
-/// housing with three squared bar lamps. Exactly one bar is lit; the rest are
-/// dimmed `mono`. Non-template so the lit color survives in the menu bar.
+/// housing with three squared bar lamps. Each lamp is lit independently via
+/// its `LampMotion`; lamps with `.off` are dimmed `mono`. Non-template so
+/// the lit color survives in the menu bar.
 enum TrafficLightIcon {
+    /// Lamp identity used only to look up the lit color; not the same as LampMotion.
+    private enum IconLamp { case red, orange, green, off }
+
     /// Fixed glyph size in points (fat aspect, fits the ~18pt menu-bar height).
     static let size = NSSize(width: 15, height: 18)
 
-    static func image(lamp: IconLamp, litAlpha: CGFloat, mono: NSColor) -> NSImage {
+    static func image(state: IconState, phase: Double, mono: NSColor) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -20,7 +24,7 @@ enum TrafficLightIcon {
         mono.setStroke()
         outline.stroke()
 
-        let lamps: [IconLamp] = [.red, .orange, .green]   // top → bottom
+        let lamps: [(IconLamp, LampMotion)] = [(.red, state.red), (.orange, state.orange), (.green, state.green)]
         let innerTop = housing.maxY - housing.width * 0.20
         let innerBot = housing.minY + housing.width * 0.20
         let span = innerTop - innerBot
@@ -30,10 +34,11 @@ enum TrafficLightIcon {
         let barR = barH * 0.22
 
         for i in 0..<3 {
+            let (lamp, motion) = lamps[i]
             let rect = NSRect(x: housing.midX - barW/2, y: centers[i] - barH/2, width: barW, height: barH)
-            let isLit = lamps[i] == lamp
-            let fill = isLit ? litColor(lamps[i]).withAlphaComponent(litAlpha)
-                             : mono.withAlphaComponent(0.28)
+            let fill = motion == .off
+                ? mono.withAlphaComponent(0.28)
+                : litColor(lamp).withAlphaComponent(CGFloat(litAlpha(for: motion, phase: phase)))
             fill.setFill()
             NSBezierPath(roundedRect: rect, xRadius: barR, yRadius: barR).fill()
         }

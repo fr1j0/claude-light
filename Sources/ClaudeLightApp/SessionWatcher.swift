@@ -8,7 +8,8 @@ import ClaudeLightCore
 final class SessionWatcher: ObservableObject {
     @Published private(set) var sessions: [Session] = []
     @Published var hooksInstalled: Bool = false
-    @Published private(set) var icon: IconState = IconState(lamp: .off, blink: false, breathe: false)
+    @Published private(set) var errorReasons: [String: String] = [:]
+    @Published private(set) var icon: IconState = IconState(red: .off, orange: .off, green: .off)
     @Published private(set) var summary: String? = nil
     @Published private(set) var animationPhase: Double = 0
     @Published private(set) var isDarkMenuBar: Bool = true
@@ -54,12 +55,36 @@ final class SessionWatcher: ObservableObject {
 
     func reload() {
         let all = (try? store.loadAll()) ?? []
-        let live = sortedForMenu(liveSessions(all, now: Date()))
-        self.sessions = live
-        let state = iconState(for: live)
+        var live = liveSessions(all, now: Date())
+        var reasons: [String: String] = [:]
+        for i in live.indices where live[i].status == .running {
+            if let path = live[i].transcriptPath,
+               let tail = transcriptTail(path: path),
+               let reason = apiErrorReason(transcriptJSONL: tail) {
+                live[i].status = .error
+                reasons[live[i].sessionID] = reason
+            }
+        }
+        let sorted = sortedForMenu(live)
+        self.sessions = sorted
+        self.errorReasons = reasons
+        let state = iconState(for: sorted)
         self.icon = state
-        self.summary = summaryText(for: statusCounts(for: live))
-        updateClock(animating: state.blink || state.breathe)
+        self.summary = summaryText(for: statusCounts(for: sorted))
+        updateClock(animating: state.isAnimating)
+    }
+
+    /// Reads the last `maxBytes` of a transcript file (whole file if smaller).
+    /// Fail-safe: returns nil on any error. A partial first line is fine —
+    /// `apiErrorReason` scans bottom-up and skips unparseable lines.
+    private func transcriptTail(path: String, maxBytes: Int = 64 * 1024) -> String? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        defer { try? handle.close() }
+        guard let end = try? handle.seekToEnd() else { return nil }
+        let start = end > UInt64(maxBytes) ? end - UInt64(maxBytes) : 0
+        try? handle.seek(toOffset: start)
+        guard let data = try? handle.readToEnd(), !data.isEmpty else { return nil }
+        return String(decoding: data, as: UTF8.self)
     }
 
     /// Runs the animation clock only while a lamp is blinking or breathing.

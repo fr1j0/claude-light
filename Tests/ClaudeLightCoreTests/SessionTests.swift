@@ -21,4 +21,15 @@ final class SessionTests: XCTestCase {
         let decoded = try ClaudeLightJSON.decoder.decode(Session.self, from: data)
         XCTAssertEqual(decoded, session)
     }
+
+    func test_transcriptPath_roundTrips_andDefaultsNilOnOldJSON() throws {
+        let s = Session(sessionID: "x", status: .running, project: "p", cwd: "/p",
+                        updatedAt: Date(timeIntervalSince1970: 1000), transcriptPath: "/t.jsonl")
+        let data = try ClaudeLightJSON.encoder.encode(s)
+        XCTAssertEqual(try ClaudeLightJSON.decoder.decode(Session.self, from: data).transcriptPath, "/t.jsonl")
+
+        let old = #"{"session_id":"y","status":"idle","project":"p","cwd":"/p","updated_at":"1970-01-01T00:16:40Z"}"#
+        let decoded = try ClaudeLightJSON.decoder.decode(Session.self, from: Data(old.utf8))
+        XCTAssertNil(decoded.transcriptPath)
+    }
 }

@@ -5,6 +5,7 @@ public enum SessionStatus: String, Codable, Sendable {
     case waiting
     case attention
     case idle
+    case error
 }
 
 public struct Session: Codable, Sendable, Equatable {
@@ -13,13 +14,16 @@ public struct Session: Codable, Sendable, Equatable {
     public var project: String
     public var cwd: String
     public var updatedAt: Date
+    public var transcriptPath: String?
 
-    public init(sessionID: String, status: SessionStatus, project: String, cwd: String, updatedAt: Date) {
+    public init(sessionID: String, status: SessionStatus, project: String, cwd: String,
+                updatedAt: Date, transcriptPath: String? = nil) {
         self.sessionID = sessionID
         self.status = status
         self.project = project
         self.cwd = cwd
         self.updatedAt = updatedAt
+        self.transcriptPath = transcriptPath
     }
 
     enum CodingKeys: String, CodingKey {
@@ -28,6 +32,7 @@ public struct Session: Codable, Sendable, Equatable {
         case project
         case cwd
         case updatedAt = "updated_at"
+        case transcriptPath = "transcript_path"
     }
 }
 

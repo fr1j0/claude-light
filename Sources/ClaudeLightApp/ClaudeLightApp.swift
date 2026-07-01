@@ -22,8 +22,8 @@ struct ClaudeLightApp: App {
             MenuContent(watcher: watcher)
         } label: {
             Image(nsImage: TrafficLightIcon.image(
-                lamp: watcher.icon.lamp,
-                litAlpha: CGFloat(litAlpha(for: watcher.icon, phase: watcher.animationPhase)),
+                state: watcher.icon,
+                phase: watcher.animationPhase,
                 mono: watcher.isDarkMenuBar ? .white : .black))
                 .onAppear {
                     watcher.start()

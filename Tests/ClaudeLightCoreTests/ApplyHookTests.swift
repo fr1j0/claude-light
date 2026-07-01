@@ -39,4 +39,15 @@ final class ApplyHookTests: XCTestCase {
         try applyHook(HookPayload(sessionID: "s1", hookEventName: "Stop", cwd: nil, message: nil), to: store, now: now)
         XCTAssertEqual(try store.loadAll().first?.project, "unknown")
     }
+
+    func test_applyHook_persistsTranscriptPath() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let store = SessionStore(directory: dir)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let payload = HookPayload(sessionID: "s1", hookEventName: "PreToolUse", cwd: "/Users/me/proj",
+                                  message: nil, transcriptPath: "/Users/me/.claude/projects/p/s1.jsonl")
+        try applyHook(payload, to: store, now: Date(timeIntervalSince1970: 1000))
+        let stored = try store.loadAll().first { $0.sessionID == "s1" }
+        XCTAssertEqual(stored?.transcriptPath, "/Users/me/.claude/projects/p/s1.jsonl")
+    }
 }

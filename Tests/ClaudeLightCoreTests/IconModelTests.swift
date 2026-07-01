@@ -6,41 +6,45 @@ final class IconModelTests: XCTestCase {
         Session(sessionID: UUID().uuidString, status: status, project: "p", cwd: "/p",
                 updatedAt: Date(timeIntervalSince1970: 1_000_000))
     }
+    private func st(_ r: LampMotion, _ o: LampMotion, _ g: LampMotion) -> IconState {
+        IconState(red: r, orange: o, green: g)
+    }
 
-    func test_empty_isOff() {
-        XCTAssertEqual(iconState(for: []), IconState(lamp: .off, blink: false, breathe: false))
+    func test_none_allOff()          { XCTAssertEqual(iconState(for: []), st(.off, .off, .off)) }
+    func test_idleOnly_green()       { XCTAssertEqual(iconState(for: [s(.idle)]), st(.off, .off, .steady)) }
+    func test_runningOnly_orange()   { XCTAssertEqual(iconState(for: [s(.running)]), st(.off, .breathe, .off)) }
+    func test_waitingRunning_singleRedSteady() {
+        XCTAssertEqual(iconState(for: [s(.waiting), s(.running)]), st(.steady, .off, .off))
     }
-    func test_allIdle_isGreenSteady() {
-        XCTAssertEqual(iconState(for: [s(.idle), s(.idle)]), IconState(lamp: .green, blink: false, breathe: false))
+    func test_attentionRunning_singleRedBlink() {
+        XCTAssertEqual(iconState(for: [s(.attention), s(.running)]), st(.blink, .off, .off))
     }
-    func test_running_isOrangeBreathing() {
-        XCTAssertEqual(iconState(for: [s(.idle), s(.running)]), IconState(lamp: .orange, blink: false, breathe: true))
+    func test_errorRunning_redBlinkPlusOrangeBreathe() {
+        XCTAssertEqual(iconState(for: [s(.error), s(.running)]), st(.blink, .breathe, .off))
     }
-    func test_waitingOnly_isRedSteady() {
-        XCTAssertEqual(iconState(for: [s(.waiting), s(.running)]), IconState(lamp: .red, blink: false, breathe: false))
+    func test_errorOnly_redBlink()   { XCTAssertEqual(iconState(for: [s(.error)]), st(.blink, .off, .off)) }
+    func test_errorIdle_redBlink_greenSuppressed() {
+        XCTAssertEqual(iconState(for: [s(.error), s(.idle)]), st(.blink, .off, .off))
     }
-    func test_attention_isRedBlinking() {
-        XCTAssertEqual(iconState(for: [s(.attention), s(.running)]), IconState(lamp: .red, blink: true, breathe: false))
-    }
-}
 
-extension IconModelTests {
-    private func steady() -> IconState { IconState(lamp: .green, blink: false, breathe: false) }
-    private func blinking() -> IconState { IconState(lamp: .red, blink: true, breathe: false) }
-    private func breathing() -> IconState { IconState(lamp: .orange, blink: false, breathe: true) }
+    func test_isAnimating() {
+        XCTAssertTrue(st(.blink, .off, .off).isAnimating)
+        XCTAssertTrue(st(.off, .breathe, .off).isAnimating)
+        XCTAssertFalse(st(.steady, .off, .steady).isAnimating)
+        XCTAssertFalse(st(.off, .off, .off).isAnimating)
+    }
 
-    func test_litAlpha_steady_isFull() {
-        XCTAssertEqual(litAlpha(for: steady(), phase: 0.0), 1.0, accuracy: 0.0001)
-        XCTAssertEqual(litAlpha(for: steady(), phase: 12.3), 1.0, accuracy: 0.0001)
+    func test_litAlpha_offSteady() {
+        XCTAssertEqual(litAlpha(for: .off, phase: 3.2), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(litAlpha(for: .steady, phase: 3.2), 1.0, accuracy: 0.0001)
     }
-    func test_litAlpha_blink_squareWave() {
-        XCTAssertEqual(litAlpha(for: blinking(), phase: 0.0), 1.0, accuracy: 0.0001)
-        XCTAssertEqual(litAlpha(for: blinking(), phase: 0.2), 1.0, accuracy: 0.0001)
-        XCTAssertEqual(litAlpha(for: blinking(), phase: 0.3), 0.2, accuracy: 0.0001)
-        XCTAssertEqual(litAlpha(for: blinking(), phase: 0.6), 1.0, accuracy: 0.0001) // wraps
+    func test_litAlpha_blink() {
+        XCTAssertEqual(litAlpha(for: .blink, phase: 0.0), 1.0, accuracy: 0.0001)
+        XCTAssertEqual(litAlpha(for: .blink, phase: 0.3), 0.2, accuracy: 0.0001)
+        XCTAssertEqual(litAlpha(for: .blink, phase: 0.6), 1.0, accuracy: 0.0001)
     }
-    func test_litAlpha_breathe_range() {
-        XCTAssertEqual(litAlpha(for: breathing(), phase: 0.0), 1.0, accuracy: 0.0001)
-        XCTAssertEqual(litAlpha(for: breathing(), phase: 0.75), 0.55, accuracy: 0.0001) // half of 1.5
+    func test_litAlpha_breathe() {
+        XCTAssertEqual(litAlpha(for: .breathe, phase: 0.0), 1.0, accuracy: 0.0001)
+        XCTAssertEqual(litAlpha(for: .breathe, phase: 0.75), 0.55, accuracy: 0.0001)
     }
 }
