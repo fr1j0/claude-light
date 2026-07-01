@@ -1,7 +1,7 @@
 import Foundation
 
-/// One parallel sub-runner dispatched by a session (an `Agent`/`Task` tool_use).
-public struct Runner: Equatable, Sendable {
+/// One parallel subagent dispatched by a session (an `Agent`/`Task` tool_use).
+public struct Subagent: Equatable, Sendable {
     public enum State: String, Sendable { case running, failed }
     public let id: String
     public let label: String
@@ -14,30 +14,30 @@ public struct Runner: Equatable, Sendable {
     }
 }
 
-/// The runners to display under a running session: visible rows plus a count of
-/// active runners hidden by the volume cap ("+N more running").
-public struct RunnerList: Equatable, Sendable {
-    public let visible: [Runner]
+/// The subagents to display under a running session: visible rows plus a count of
+/// active subagents hidden by the volume cap ("+N more running").
+public struct SubagentList: Equatable, Sendable {
+    public let visible: [Subagent]
     public let overflowRunning: Int
 
-    public init(visible: [Runner], overflowRunning: Int) {
+    public init(visible: [Subagent], overflowRunning: Int) {
         self.visible = visible
         self.overflowRunning = overflowRunning
     }
 
-    public static let empty = RunnerList(visible: [], overflowRunning: 0)
+    public static let empty = SubagentList(visible: [], overflowRunning: 0)
     public var isEmpty: Bool { visible.isEmpty && overflowRunning == 0 }
 }
 
 /// Pairs `Agent`/`Task` tool_use blocks with their tool_results in a parent
-/// session's transcript (JSONL) to surface its parallel runners.
+/// session's transcript (JSONL) to surface its parallel subagents.
 ///
-/// State per runner: no matching tool_result → **running**; `is_error: true` →
+/// State per subagent: no matching tool_result → **running**; `is_error: true` →
 /// **failed** (persisted so you notice it); otherwise → **done** (dropped).
-/// Only running + failed are returned. Running runners are capped at `maxActive`
-/// with the remainder reported as `overflowRunning`; failed runners are never
+/// Only running + failed are returned. Running subagents are capped at `maxActive`
+/// with the remainder reported as `overflowRunning`; failed subagents are never
 /// capped. Defensive/fail-safe: unparseable lines are skipped.
-public func runners(fromTranscript jsonl: String, maxActive: Int = 5) -> RunnerList {
+public func subagents(fromTranscript jsonl: String, maxActive: Int = 5) -> SubagentList {
     struct Pending { let id: String; let label: String }
     var order: [Pending] = []
     var seen = Set<String>()
@@ -66,21 +66,21 @@ public func runners(fromTranscript jsonl: String, maxActive: Int = 5) -> RunnerL
         }
     }
 
-    var visible: [Runner] = []
+    var visible: [Subagent] = []
     var runningShown = 0
     var overflow = 0
     for p in order {
         if let isError = errored[p.id] {
-            if isError { visible.append(Runner(id: p.id, label: p.label, state: .failed)) }
+            if isError { visible.append(Subagent(id: p.id, label: p.label, state: .failed)) }
             // completed successfully → dropped
         } else {
             if runningShown < maxActive {
-                visible.append(Runner(id: p.id, label: p.label, state: .running))
+                visible.append(Subagent(id: p.id, label: p.label, state: .running))
                 runningShown += 1
             } else {
                 overflow += 1
             }
         }
     }
-    return RunnerList(visible: visible, overflowRunning: overflow)
+    return SubagentList(visible: visible, overflowRunning: overflow)
 }
