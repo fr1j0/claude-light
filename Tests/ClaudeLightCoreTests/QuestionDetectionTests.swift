@@ -26,6 +26,22 @@ final class QuestionDetectionTests: XCTestCase {
         XCTAssertFalse(textEndsWithQuestion("value = a ? b : c"))
     }
 
+    func test_endsWithQuestion_false_longDeliverableTrailingQuestion() {
+        // A long turn that did work and merely checks in at the end is NOT a
+        // blocking question — don't flag "awaiting your reply".
+        let long = String(repeating: "Here is a chunk of the summary. ", count: 12) + "Want me to proceed?"
+        XCTAssertFalse(textEndsWithQuestion(long))
+    }
+
+    func test_endsWithQuestion_false_questionMarkInsideCode() {
+        // A `?` inside a fenced code block is not a question to the user.
+        XCTAssertFalse(textEndsWithQuestion("Here is the fix:\n```\nx = a ? b : c\nprint(y?)\n```"))
+    }
+
+    func test_endsWithQuestion_true_conciseQuestionWithInlineCode() {
+        XCTAssertTrue(textEndsWithQuestion("Should I run `git status` first?"))
+    }
+
     // MARK: - lastAssistantText
 
     // Fixtures shaped like real Claude Code JSONL entries

@@ -36,6 +36,16 @@ final class AggregateTests: XCTestCase {
         XCTAssertEqual(liveSessions([edge], now: now, ttl: 1800).count, 1)
     }
 
+    func test_liveSessions_defaultTTL_keepsHoursOldIdleSession() {
+        // A session you leave open and idle for a few hours must not vanish.
+        XCTAssertEqual(liveSessions([s(.idle, ageSeconds: 3 * 3600)], now: now).count, 1)
+    }
+
+    func test_liveSessions_defaultTTL_dropsVeryOldSession() {
+        // But a session with no hook events for most of a day ages out (likely dead).
+        XCTAssertEqual(liveSessions([s(.idle, ageSeconds: 9 * 3600)], now: now).count, 0)
+    }
+
     func test_attentionSession_isRed() {
         XCTAssertEqual(aggregateLight(for: [s(.attention)]), .red)
     }
