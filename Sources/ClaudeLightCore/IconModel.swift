@@ -21,18 +21,21 @@ public struct IconState: Sendable, Equatable {
 
 /// Model B: today's single aggregate lamp (red > orange > green) with `error`
 /// layered on additively as a blinking red that does NOT suppress the base.
+/// Handoff (review requested) is a base-red like waiting: steady, never blink.
 public func iconState(for sessions: [Session]) -> IconState {
     let hasError = sessions.contains { $0.status == .error }
     let hasAttention = sessions.contains { $0.status == .attention }
     let hasWaiting = sessions.contains { $0.status == .waiting }
+    let hasHandoff = sessions.contains { $0.status == .handoff }
     let hasRunning = sessions.contains { $0.status == .running }
     let hasIdle = sessions.contains { $0.status == .idle }
 
-    let red: LampMotion = (hasError || hasAttention) ? .blink : (hasWaiting ? .steady : .off)
-    // Orange is suppressed by a base-red (waiting/attention) but NOT by error.
-    let orange: LampMotion = (hasRunning && !hasWaiting && !hasAttention) ? .breathe : .off
+    let baseRed = hasWaiting || hasHandoff
+    let red: LampMotion = (hasError || hasAttention) ? .blink : (baseRed ? .steady : .off)
+    // Orange is suppressed by a base-red (waiting/handoff/attention) but NOT by error.
+    let orange: LampMotion = (hasRunning && !baseRed && !hasAttention) ? .breathe : .off
     // Green only when nothing else is active at all.
-    let green: LampMotion = (hasIdle && !hasError && !hasRunning && !hasWaiting && !hasAttention) ? .steady : .off
+    let green: LampMotion = (hasIdle && !hasError && !hasRunning && !baseRed && !hasAttention) ? .steady : .off
 
     return IconState(red: red, orange: orange, green: green)
 }

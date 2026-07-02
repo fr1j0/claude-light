@@ -66,4 +66,9 @@ final class AggregateTests: XCTestCase {
     func test_emptyNeedsAttentionFalse() {
         XCTAssertFalse(aggregateNeedsAttention([]))
     }
+
+    func test_handoffSession_isRedButNotNeedsAttention() {
+        XCTAssertEqual(aggregateLight(for: [s(.handoff)]), .red)
+        XCTAssertFalse(aggregateNeedsAttention([s(.handoff)]))
+    }
 }

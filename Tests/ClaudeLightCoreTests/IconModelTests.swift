@@ -47,4 +47,17 @@ final class IconModelTests: XCTestCase {
         XCTAssertEqual(litAlpha(for: .breathe, phase: 0.0), 1.0, accuracy: 0.0001)
         XCTAssertEqual(litAlpha(for: .breathe, phase: 0.75), 0.55, accuracy: 0.0001)
     }
+
+    func test_handoffOnly_redSteady() {
+        XCTAssertEqual(iconState(for: [s(.handoff)]), st(.steady, .off, .off))
+    }
+    func test_handoffRunning_redSteady_orangeSuppressed() {
+        XCTAssertEqual(iconState(for: [s(.handoff), s(.running)]), st(.steady, .off, .off))
+    }
+    func test_handoffIdle_redSteady_greenSuppressed() {
+        XCTAssertEqual(iconState(for: [s(.handoff), s(.idle)]), st(.steady, .off, .off))
+    }
+    func test_handoffAttention_redBlinkWins() {
+        XCTAssertEqual(iconState(for: [s(.handoff), s(.attention)]), st(.blink, .off, .off))
+    }
 }
