@@ -44,4 +44,22 @@ final class HookActionTests: XCTestCase {
     func test_unknownEvent_isIgnored() {
         XCTAssertEqual(action(for: payload("PostToolUse")), .ignore)
     }
+
+    func test_stop_approvalProseTranscript_isHandoff() {
+        let jsonl = #"{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Spec is written on the branch.\n\nPlease review — and if it looks right I'll move on to the implementation plan."}]}}"#
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: jsonl), .set(.handoff))
+    }
+
+    func test_stop_conciseQuestion_attentionWinsOverHandoff() {
+        // Ends with "?" AND contains an approval phrase; concise → attention keeps first claim.
+        let jsonl = #"{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Let me know — should I proceed?"}]}}"#
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: jsonl), .set(.attention))
+    }
+
+    func test_stop_longTurnEndingInQuestionParagraph_isHandoff() {
+        let text = String(repeating: "Here is a chunk of the summary. ", count: 12)
+            + "\\n\\nShould I use approach A or B?"
+        let jsonl = #"{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":""# + text + #""}]}}"#
+        XCTAssertEqual(action(for: payload("Stop"), transcriptJSONL: jsonl), .set(.handoff))
+    }
 }
