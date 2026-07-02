@@ -18,5 +18,10 @@ cask "claude-light" do
   caveats <<~EOS
     Launch Claude Light, then use "Install Claude Code hooks" from the menu
     to wire it into ~/.claude/settings.json.
+
+    Current releases are unsigned interim builds (Apple notarization pending),
+    so Gatekeeper may report the app as "damaged and can't be opened".
+    Clear the quarantine flag and launch again:
+      xattr -dr com.apple.quarantine "#{appdir}/Claude Light.app"
   EOS
 end
