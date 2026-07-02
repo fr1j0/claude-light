@@ -68,6 +68,8 @@ brew trust fr1j0/claude-light   # newer Homebrew requires trusting third-party t
 brew install --cask claude-light
 ```
 
+Update any time with `brew upgrade --cask claude-light`. There is no auto-update or in-app update check — updates only arrive through Homebrew (or by downloading a newer release manually).
+
 ### From GitHub Releases
 
 Download the latest `.app` from [GitHub Releases](https://github.com/fr1j0/claude-light/releases) and verify the published SHA-256 checksum to confirm authenticity.
