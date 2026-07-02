@@ -28,7 +28,7 @@ The menu-bar icon reflects the most urgent state across all your sessions:
 
 | Lamp | Meaning | Motion |
 |------|---------|--------|
-| <img src="assets/lamp-red.svg" width="22" alt=""> Top — red | A session needs you: a question or permission prompt is waiting | Blinks |
+| <img src="assets/lamp-red.svg" width="22" alt=""> Top — red | A session needs you: a question, permission prompt, or review request is waiting | Blinks |
 | <img src="assets/lamp-orange.svg" width="22" alt=""> Middle — orange | At least one session is actively working | Gentle pulse |
 | <img src="assets/lamp-green.svg" width="22" alt=""> Bottom — green | Sessions are idle; nothing needs you | Steady |
 | <img src="assets/lamp-dim.svg" width="22" alt=""> All dim | No live sessions | Steady |
