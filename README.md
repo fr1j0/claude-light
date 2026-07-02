@@ -64,12 +64,19 @@ For the full technical design, see the specs under [`docs/superpowers/specs/`](d
 
 ```bash
 brew tap fr1j0/claude-light
+brew trust fr1j0/claude-light   # newer Homebrew requires trusting third-party taps
 brew install --cask claude-light
 ```
 
 ### From GitHub Releases
 
-Download the latest notarized `.app` from [GitHub Releases](https://github.com/fr1j0/claude-light/releases) and verify the published SHA-256 checksum to confirm authenticity.
+Download the latest `.app` from [GitHub Releases](https://github.com/fr1j0/claude-light/releases) and verify the published SHA-256 checksum to confirm authenticity.
+
+> **Note — unsigned interim builds:** releases are currently ad-hoc signed while Apple notarization for the team is pending, so on first launch Gatekeeper may report the app as *"damaged and can't be opened"*. Clear the quarantine flag and launch again:
+>
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/Claude Light.app"
+> ```
 
 ## First Run
 
@@ -90,7 +97,7 @@ bash scripts/package-app.sh     # produce dist/Claude Light.app
 
 ## Security & Trust
 
-Claude Light edits your settings and runs on every Claude Code hook, so it is fully open source and auditable — read the source and verify it for yourself. Official builds are signed and notarized with the maintainer's Apple Developer ID, which removes the "unidentified developer" warning and guarantees the binary has not been tampered with.
+Claude Light edits your settings and runs on every Claude Code hook, so it is fully open source and auditable — read the source and verify it for yourself. Current releases are interim builds **without** Developer ID signing or notarization (pending Apple enabling notarization for the team); until that lands, authenticity rests on the published SHA-256 checksums and the auditable source. Once notarization is enabled, official builds will be signed and notarized, removing the Gatekeeper warning and guaranteeing the binary has not been tampered with.
 
 Install only from the official [Releases](https://github.com/fr1j0/claude-light/releases), and verify the published SHA-256 checksum before running.
 
