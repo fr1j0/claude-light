@@ -32,4 +32,13 @@ final class SessionTests: XCTestCase {
         let decoded = try ClaudeLightJSON.decoder.decode(Session.self, from: Data(old.utf8))
         XCTAssertNil(decoded.transcriptPath)
     }
+
+    func test_handoffStatus_roundTrips_throughJSON() throws {
+        let s = Session(sessionID: "h1", status: .handoff, project: "p", cwd: "/p",
+                        updatedAt: Date(timeIntervalSince1970: 1000))
+        let data = try ClaudeLightJSON.encoder.encode(s)
+        let json = String(decoding: data, as: UTF8.self)
+        XCTAssertTrue(json.contains("\"status\":\"handoff\""))
+        XCTAssertEqual(try ClaudeLightJSON.decoder.decode(Session.self, from: data), s)
+    }
 }

@@ -14,11 +14,11 @@ public func textEndsWithQuestion(_ text: String) -> Bool {
 }
 
 /// Upper bound (characters) for treating a turn as a pending question. Tunable.
-private let questionMaxLength = 240
+let questionMaxLength = 240
 
 /// Remove fenced ```code``` blocks and `inline` code spans so a `?` inside code
 /// isn't mistaken for a question.
-private func strippingCode(_ s: String) -> String {
+func strippingCode(_ s: String) -> String {
     var t = s.replacingOccurrences(of: "```[\\s\\S]*?```", with: " ", options: .regularExpression)
     t = t.replacingOccurrences(of: "`[^`]*`", with: " ", options: .regularExpression)
     return t
