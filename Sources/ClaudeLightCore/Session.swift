@@ -4,6 +4,7 @@ public enum SessionStatus: String, Codable, Sendable {
     case running
     case waiting
     case attention
+    case handoff
     case idle
     case error
 }

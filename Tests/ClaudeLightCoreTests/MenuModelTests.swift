@@ -65,4 +65,20 @@ extension MenuModelTests {
         XCTAssertEqual(relativeTime(secondsAgo: 86399), "23h")
         XCTAssertEqual(relativeTime(secondsAgo: 86400), "1d")
     }
+
+    func test_counts_handoffFoldsIntoNeedYou() {
+        let c = statusCounts(for: [s(.handoff), s(.waiting), s(.running)])
+        XCTAssertEqual(c, StatusCounts(needYou: 2, working: 1, idle: 0, error: 0))
+    }
+
+    func test_sorted_handoffBetweenWaitingAndRunning() {
+        let input = [
+            s(.running, project: "r"),
+            s(.handoff, project: "h"),
+            s(.idle, project: "z"),
+            s(.waiting, project: "w"),
+        ]
+        let order = sortedForMenu(input).map { "\($0.status.rawValue):\($0.project)" }
+        XCTAssertEqual(order, ["waiting:w", "handoff:h", "running:r", "idle:z"])
+    }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 public struct StatusCounts: Sendable, Equatable {
-    public let needYou: Int   // waiting + attention
+    public let needYou: Int   // waiting + attention + handoff
     public let working: Int   // running
     public let idle: Int
     public let error: Int
@@ -17,7 +17,7 @@ public func statusCounts(for sessions: [Session]) -> StatusCounts {
     var needYou = 0, working = 0, idle = 0, error = 0
     for session in sessions {
         switch session.status {
-        case .waiting, .attention: needYou += 1
+        case .waiting, .attention, .handoff: needYou += 1
         case .running: working += 1
         case .idle: idle += 1
         case .error: error += 1
@@ -50,8 +50,9 @@ public func sortedForMenu(_ sessions: [Session]) -> [Session] {
         case .error: return 0
         case .attention: return 1
         case .waiting: return 2
-        case .running: return 3
-        case .idle: return 4
+        case .handoff: return 3
+        case .running: return 4
+        case .idle: return 5
         }
     }
     return sessions.sorted { a, b in
